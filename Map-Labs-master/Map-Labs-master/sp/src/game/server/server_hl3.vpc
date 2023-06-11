@@ -1,0 +1,68 @@
+$Project
+{
+   $Folder	"HL3"
+		{
+		   $File	"$SRCDIR\game\server\npc_darkfusionantlion.cpp"
+		}
+		
+		$Folder	"Insolence"
+		{
+		   $File	"$SRCDIR\game\server\weapon_binoculars.cpp"
+		}
+		
+		$Folder	"Human_Error"
+		{
+		   $File	"$SRCDIR\game\server\Human_Error\hlss_weapon_id.h"
+		   $File	"$SRCDIR\game\server\Human_Error\vehicle_drivable_apc.cpp"
+		   $File	"$SRCDIR\game\server\Human_Error\vehicle_drivable_apc.h"
+		   $File	"$SRCDIR\game\server\hlss_abs_copy.cpp"
+		   $File	"$SRCDIR\game\server\hlss_debris_maker.cpp"
+		   $File	"$SRCDIR\game\server\hlss_debris_maker.h"
+		   $File	"$SRCDIR\game\server\hlss_weapon_stripper.cpp"
+		   $File	"$SRCDIR\game\server\prop_xenplant.cpp"
+		   $File	"$SRCDIR\game\server\npc_pitmonster.cpp"
+		   $File	"$SRCDIR\game\server\prop_crystal.cpp"
+		}
+		
+		$Folder	"Episode3"
+		{
+		   $File	"$SRCDIR\game\server\Episode3\npc_combine_armored.cpp"
+		   $File	"$SRCDIR\game\server\Episode3\weapon_proto1.cpp" 
+		}
+		
+		$Folder	"EZ2"
+		{
+		   $File	"$SRCDIR\game\server\EZ2\weapon_custom_flaregun.cpp" 
+		}
+			
+		$Folder	"smod3"
+		{
+		   $File	"$SRCDIR\game\server\smod3\npc_combineguard.cpp" 
+		   $File	"$SRCDIR\game\server\smod3\npc_cremator.cpp" 
+		   $File	"$SRCDIR\game\server\smod3\npc_cremator.h" 
+		}
+		
+		$Folder	"icemod"
+		{
+		   $File	"$SRCDIR\game\server\npc_chumtoad.cpp" 
+		   $File	"$SRCDIR\game\server\npc_chumtoad.h" 
+		   $File	"$SRCDIR\game\server\npc_icedog.cpp" 
+		}
+		
+		$Folder	"downfall"
+		{
+		   $File	"$SRCDIR\game\server\downfall\trigger_gunfire.cpp" 
+		   $File	"$SRCDIR\game\server\downfall\trigger_gunfire.h"   
+		}
+		
+		$Folder	"hl2_beta"
+		{
+		   $File	"$SRCDIR\game\server\hl2\npc_assassin.cpp"
+		   $File	"$SRCDIR\game\server\hl2\npc_assassin.h"
+		   $File	"$SRCDIR\game\server\hl2\npc_mortarsynth.cpp"
+		   $File	"$SRCDIR\game\server\hl2\npc_mortarsynth.h"
+		   $File	"$SRCDIR\game\server\hl2\grenade_energy.cpp"
+		   $File	"$SRCDIR\game\server\hl2\grenade_energy.h"
+		   $File	"$SRCDIR\game\server\weapon_iceaxe.cpp"
+		}
+}
