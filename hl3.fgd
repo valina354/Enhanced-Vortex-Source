@@ -1,0 +1,302 @@
+//====== Copyright © 1996-2005, Valve Corporation, All rights reserved. =======
+//
+// Purpose: New Entites From Human Error, Maestra Fénix, downfall and icemod,leaked 2007 code and entropy zero 2
+//
+// Copy and paste the code on the fgd of your mod.
+//=============================================================================
+
+@include "base.fgd"
+@include "halflife2.fgd"
+
+
+@NPCClass base(BaseNPC) studio("models/combine_assassin.mdl") = npc_assassin : "Combine Assassin"
+[
+]
+
+@NPCClass base(BaseNPC) studio("models/mortarsynth.mdl") = npc_mortarsynth : "Combine Mortar Synth"
+[
+]
+
+@NPCClass base(BaseNPC) studio("models/armored_soldier.mdl") = npc_combine_armored : "Combine Soldier With Armor"
+[
+	model(choices) : "Model" : "models/armored_soldier.mdl" : "Sets this soldier's model." = 
+	[
+	    "models/armored_soldier.mdl" : "Armored Soldier Model"
+		"models/combine_soldier.mdl" : "Regular Soldier"
+		"models/combine_soldier_prisonguard.mdl" : "Nova Prospekt Soldier"
+		"models/combine_super_soldier.mdl" : "Elite Soldier"
+		"models/combine_soldirt.mdl" : "Dirty Soldier/EP2 Soldier"
+		"models/combine_super_soldirt.mdl" : "Dirty Elite Soldier/EP2 Elite"
+		"models/combine_soldirt_prisonguard.mdl" : "Dirty Nova Prospekt Soldier"
+	]
+
+	tacticalvariant(choices) : "Tactical Variant" : "0" =
+	[
+		"0" : "Normal Tactics"
+		"1" : "Pressure the enemy (Keep advancing)"
+		"2" : "Pressure until within 30ft, then normal"
+		"3" : "Grenade Happy"
+	]
+	
+	usemarch(choices) : "Use March" : "0" : "When true, will use a special walking animation which blends itself between the idle walking animation and the regular walking animation, allowing for a variety of casual walking animations instead of the standard walk. Used in EP2 for the soldiers in the bridge convoy. WARNING: This animation only has a north component, so it can't sidestep or walk backwards. This keyvalue was previously named 'Walk Easy', but it was changed to avoid confusion with ACT_WALK_EASY, the main idle walking animation." =
+	[
+		"0" : "No"
+		"2" : "Yes"
+	]
+	
+	additionalequipment(choices) : "Weapons" : "weapon_smg1" =
+	[
+		"weapon_pistol" : "Pistol"
+		"weapon_smg1"  : "SMG1"
+		"weapon_stunstick"  : "Stun Stick"
+		"weapon_crowbar"  : "Crowbar"
+		"weapon_ar2"  : "AR2"
+		"weapon_shotgun"  : "Shotgun"
+		"weapon_357" : "357"
+		"weapon_rpg"  : "RPG"
+		"weapon_citizenpackage" : "Citizen Package"
+		"weapon_citizensuitcase" : "Citizen Suitcase"
+		"0"  : "Nothing"
+	]
+	
+	input Assault(target_destination) : "Start an assault. Parameter passed in should be the name of the rally point."
+	input SetTacticalVariant(integer) : "Sets this soldier's tactical variant based on integer value."
+]
+
+@PointClass base(prop_dynamic_base,EnableDisable) studio() = prop_xenplant : "Xen Plant"
+[
+	model(studio) : "World model" : "models/props_xen/plant001.mdl"
+
+	closed(choices) : "Start closed" : 0 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	canhide(choices) : "Can hide" : 1 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	hidedistance(integer) : "Hide distance" : 128 : "At what distance to hide from the player."
+
+	input Close(void) 	: "Close the door way."
+	input EnableHide(void) 	: "Enable hiding."
+	input DisableHide(void)	: "Disable hiding."
+
+	output OnHide(void) 	: "If lightbulbs went hiding."
+	output OnUnhide(void)	: "When lightbulbs came out from hiding."
+]
+
+@PointClass base(prop_physics) studio() = prop_crystal : "Prop_physics that emits a small elight."
+[
+]
+
+
+@PointClass base(Targetname) = hlss_weaponstripper : "Remove given ammo type."
+[
+	input TakeAmmo(string) : "Remove Ammo 1 of given type."
+	input TakeAllAmmo(string) : "Remove all Ammo of given type."
+	output AmmoRemoved(void) : "If ammo was removed."
+	output NoAmmo(void) : "If no ammo were removed."
+]
+
+@NPCClass base(VehicleDriverNPC) studio("models/HLSS_Characters/TruckDriver.mdl") = npc_truckdriver : 
+	"NPC used to drive a target vehicle."
+[
+	drivermaxspeed(float) : "Maxspeed." : 1 : "Percentage of vehicle's minspeed."
+	driverminspeed(float) : "MinSpeed." : 0 : "Percentage of vehicle's maxspeed."
+	followplayerspeedscale(float) : "Player follow speed scale" : "0.75"  	
+
+	followplayerspeed(choices) : "Follow player" : 1 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	input EnablePlayerFollow(void) : "Enable Player Speed Following."
+	input DisablePlayerFollow(void) : "Disable Player Speed Following."
+	input SetDriversMaxSpeed(float) : "Set the Maxspeed."
+	input SetDriversMinSpeed(float) : "Set the Minspeed."
+	input StartForward(void) : "Tell the driver to start driving."
+	input Stop(void) : "Tell the driver to stop driving."
+	input FollowPlayer(void) : "Set GoalEnt as !player."
+]
+
+@NPCClass base(BaseNPC) studio("models/missile_defense.mdl") = npc_missiledefense : "A turret who takes down rockets from the player"
+[
+	spawnflags(flags) = 
+	[
+		65536  :  "Vulnerable to bullets" : 0
+	]
+
+	Health(Integer) : "Health" : 10
+	TurretModel(studio) : "Turret Model" : "models/missile_defense.mdl"
+	GibModel(studio) : "Gib Model" : "models/gibs/manhack_gib01.mdl"
+	FireSound(sound) : "Fire Sound" : "npc/turret_floor/shoot1.wav"
+	RotateSound(sound) :	"Rotate Sound": "npc/turret_floor/ping.wav"
+	ReloadSound(sound) :	"Reload Sound": "vehicles/tank_readyfire1.wav"
+	
+	StartOn(choices) : "Start On" : 1 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	// Inputs
+	input TurnOn(void) : "Turn on: Look for enemies"
+	input TurnOff(void) : "Turn off: Stop looking for enemies"
+]
+
+@SolidClass base(Trigger) = trigger_gunfire :
+	"A volumetric trigger that triggers whenever a gun is fired within it or a bullet passes through it with additional options for explosion reception."
+[
+	output OnGunfire(void) : "Fires when any gunfire is within its bounds."
+	output OnExplosion(void) : "Fires when any explosion is within its bounds."
+]
+
+@NPCClass base(BaseNPC) studio("models/Chumtoad/chumtoad.mdl") = npc_chumtoad : "Chumtoad"
+[
+]
+
+@NPCClass base(BaseNPC) studio("models/dog/dog.mdl") = npc_icedog : "Ice Dog"
+[
+	spawnflags(Flags) =
+	[
+		65536 : "Create server-side ragdoll on death" : 0
+		131072 : "Use inside footsteps" : 0
+	]
+
+	allowbark(choices) : "Allow Bark" : "No" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	cavernbreed(choices) : "Cavern Guard Model and Texture" : "No" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	
+	incavern(choices) : "Use inside-Cavern Behavior" : "No" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	shovetargets(string) : "Shove Targets" : ""
+
+	// Inputs
+	input Unburrow(void) : "Unburrow from the ground"
+	input SetShoveTarget(string) : "Sets a shove target to attack"
+	input SetChargeTarget(string) : "Sets a charge target to attack.  Parameters are the name of the entity to start at and the name of the entity to charge towards, separated by a space (i.e. start target)"
+	input ClearChargeTarget(void) : "Clear the charge target"
+	input SetCoverFromAttack(integer) : "Sets whether or not the creature will protect itself from attacks"
+	input Ragdoll(void) : "Causes the antlion guard to die, regardless of health"
+	input EnableBark(void) : "Allow the antlion guard to try and summon antlions"
+	input DisableBark(void) : "Stop the antlion guard from trying to summon antlions"
+	input InvestigateHint(string) : "Sniff around at a hint group until told otherwise"
+	input StopInvestigating(void) : "Stop trying to sniff out the player"
+
+	input EnablePreferPhysicsAttack(void) : "Prefer to use physics attacks if at all possible, even when inside a cavern."
+	input DisablePreferPhysicsAttack(void) : "Do not prefer to use physics attacks if at all possible, even when inside a cavern."
+
+		
+	// Outputs
+	output OnSeeHiddenPlayer(void) : "Fires when the current enemy is seen while trying to hide"
+	output OnSmellHiddenPlayer(void) : "Fires when the current enemy is smelled while trying to hide"
+	output OnSummon(void) : "Antlion guard is attempting to summon antlions"
+]
+
+@PointClass base(BaseDriveableVehicle) studioprop() = prop_vehicle_drivable_apc :
+	"Driveable studiomodel APC."
+[
+	model(studio) : "World model" : "models/vehicles/combine_apc.mdl"
+	vehiclescript(string) :	"Vehicle Script File" : "scripts/vehicles/drivable_apc.txt"
+
+	cannotmove(choices) : "Cannot Move" : 0 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	// Inputs
+	input DisableMove(void) : "Disable APC movement, machine gun and rockets only."
+	input EnableMove(void) : "Enable APC movement."
+	input ForcePlayerOut(void) : "Force the player out of the vehicle."
+	
+	// Outputs
+	output OnOverturned(void) : "Fired when the APC is overturned."
+	output OnObjectAttached(void) : "Fired when an object is attached to the APC."
+]
+
+@NPCClass base(BaseNPC) studio("models/combine_guard.mdl") = npc_combineguard : "Combine Guard"
+[
+]
+
+@NPCClass base(BaseNPC) studio("models/Cremator.mdl") = npc_cremator : "Combine Cremator"
+[
+]
+
+@NPCClass base(BaseNPC, npc_cscanner) studio("models/combine_scanner.mdl") = npc_wpnscanner : "City Scanner W/ Weapon"
+[
+	spawnflags(Flags) = 
+	[
+		65536 :  "No Dynamic Light" : 0
+		131072: "Strider Scout Scanner" : 0
+	]
+
+	spotlightlength(integer) : "SpotlightLength" : 500
+	spotlightwidth(integer) : "SpotlightWidth" : 50	
+	
+	spotlightdisabled(choices) : "SpotlightDisabled" : 0 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	ShouldInspect(choices) : "Should inspect" : 1 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	OnlyInspectPlayers(choices) : "Only Inspect Players" : 0 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+
+	NeverInspectPlayers(choices) : "Never Inspect Players" : 0 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	// Inputs
+	input DisableSpotlight(void) : "DisableSpotlight"
+	input InspectTargetPhoto(string) : "Tells the scanner to photograph the given entity, named by classname or by target name. !activator or !player works here also."
+	input InspectTargetSpotlight(string) : "Tells the scanner to spotlight the given entity, named by classname or by target name. !activator or !player works here also."
+	input InputSetFlightSpeed(integer) : "Sets the flight speed of the scanner"
+	input InputShouldInspect(integer) : "Set whether should inspect or not"
+	input SetFollowTarget(string) : "Set target to follow until told otherwise"
+	input ClearFollowTarget(void) : "Stop following our target"
+	input SetDistanceOverride(float) : "Override the distance the scanner will attempt to keep between inspection targets and itself"
+
+	input DeployMine(void) : "Drop landmine (if carrying one)"
+	input EquipMine(void) : "Equip with landmine"
+	
+	// Outputs
+	output OnPhotographPlayer(void) : "Fired any time the scanner takes a picture of the player."
+	output OnPhotographNPC(void) : "Fired any time the scanner takes a picture of an NPC."
+]
+
+@NPCClass base(BaseNPC) studio("models/weapons/w_greande.mdl") = npc_contactgrenade : "Grenade that explodes on contact"
+[
+]
+
+
+//@PointClass base(Weapon) studio("models/weapons/w_physics.mdl") = weapon_physgun : "Physics Gun" []
+//@PointClass base(Weapon) studio("models/weapons/w_sniper.mdl") = weapon_sniperrifle : "Sniper Rifle" []
+@PointClass base(Weapon) studio("models/weapons/w_binoculars.mdl") = weapon_binoculars : "Binoculars" []
