@@ -2894,14 +2894,39 @@ EXPOSE_INTERFACE( CMotionBlurMaterialProxy, IMaterialProxy, "MotionBlur" IMATERI
 //=====================================================================================================================
 ConVar mat_motion_blur_enabled( "mat_motion_blur_enabled", "1", FCVAR_ARCHIVE );
 
-ConVar mat_motion_blur_forward_enabled( "mat_motion_blur_forward_enabled", "0" );
+ConVar mat_motion_blur_forward_enabled("mat_motion_blur_forward_enabled", "1", FCVAR_ARCHIVE);
 ConVar mat_motion_blur_falling_min( "mat_motion_blur_falling_min", "10.0" );
 
 ConVar mat_motion_blur_falling_max( "mat_motion_blur_falling_max", "20.0" );
 ConVar mat_motion_blur_falling_intensity( "mat_motion_blur_falling_intensity", "1.0" );
 //ConVar mat_motion_blur_roll_intensity( "mat_motion_blur_roll_intensity", "1.0" );
 ConVar mat_motion_blur_rotation_intensity( "mat_motion_blur_rotation_intensity", "1.0" );
-ConVar mat_motion_blur_strength( "mat_motion_blur_strength", "1.0" );
+ConVar mat_motion_blur_strength( "mat_motion_blur_strength", "3.0" );
+ConVar mat_motion_blur_running_intensity("mat_motion_blur_running_intensity", "3.5");
+ConVar mat_motion_blur_vehicle_intensity("mat_motion_blur_vehicle_intensity", "0.3");
+ConVar mat_motion_blur_roll_intensity("mat_motion_blur_roll_intensity", "0.3");
+
+float ForwardIntensity(void)
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if (pPlayer && mat_motion_blur_forward_enabled.GetBool())
+	{
+		if (pPlayer->IsAlive())
+		{
+			if (pPlayer->IsInAVehicle())
+				return mat_motion_blur_vehicle_intensity.GetFloat();
+
+			float speed;
+			speed = pPlayer->GetAbsVelocity().Length2D();
+
+			if ((speed > 190) && (pPlayer->GetFlags() & FL_ONGROUND))
+				return mat_motion_blur_running_intensity.GetFloat();
+		}
+	}
+
+	return mat_motion_blur_falling_intensity.GetFloat();
+}
 
 struct MotionBlurHistory_t
 {
