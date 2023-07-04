@@ -60,6 +60,8 @@ $Project
 		$File	"unlittwotexture_dx9.cpp"
 		$File	"MonitorScreen_dx9.cpp"
 		$File	"shatteredglass.cpp"
+		$File	"gaussianx.cpp"
+		$File	"gaussiany.cpp"
 		$File	"windowimposter_dx90.cpp"
 		
 		$File	"engine_post_dx9.cpp"

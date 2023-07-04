@@ -864,6 +864,10 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_vignette_border" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_vignette" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_post" )
+	
+	CLIENTEFFECT_MATERIAL( "effects/shaders/screen_blurx" )
+	CLIENTEFFECT_MATERIAL( "effects/shaders/screen_blury" )
+	
 #endif
 
 CLIENTEFFECT_REGISTER_END_CONDITIONAL( engine->GetDXSupportLevel() >= 90 )
@@ -994,6 +998,7 @@ CViewRender::CViewRender()
 {
 	m_flCheapWaterStartDistance = 0.0f;
 	m_flCheapWaterEndDistance = 0.1f;
+	m_flViewModelBlurAmount = 0.0f;
 	m_BaseDrawFlags = 0;
 	m_pActiveRenderer = NULL;
 	m_pCurrentlyDrawingEntity = NULL;
@@ -2283,6 +2288,15 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			}
 		}
 
+if ( !building_cubemaps.GetBool() )
+		{
+			if ( view.m_bDoBloomAndToneMapping )
+			{
+				PerformPreViewmodelPostProcessEffects( view.x, view.y, view.width, view.height );
+			}
+		}
+
+
 		GetClientModeNormal()->DoPostScreenSpaceEffects( &view );
 
 		// Now actually draw the viewmodel
@@ -2609,7 +2623,54 @@ void CViewRender::Render2DEffectsPostHUD( const CViewSetup &view )
 {
 }
 
+ConVar r_post_reload_blur( "r_post_reload_blur", "1", FCVAR_ARCHIVE );
+ConVar r_post_reload_blur_amount( "r_post_reload_blur_amount", "2.0", FCVAR_CHEAT );
+ConVar r_post_reload_blur_rate( "r_post_reload_blur_rate", "0.1", FCVAR_CHEAT );
 
+void CViewRender::PerformPreViewmodelPostProcessEffects( int x, int y, int width, int height )
+{
+	if( !r_post_reload_blur.GetBool() )
+		return;
+
+	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+
+	if( !player || !player->GetActiveWeapon() )
+		return;
+
+	bool blurstate = player->GetActiveWeapon()->GetBlurState();
+
+	if( blurstate )
+	{
+		if( m_flViewModelBlurAmount != r_post_reload_blur_amount.GetFloat() )
+		{
+			m_flViewModelBlurAmount = FLerp( m_flViewModelBlurAmount, r_post_reload_blur_amount.GetFloat(), r_post_reload_blur_rate.GetFloat() );
+		}
+	}
+	else
+	{
+		if( m_flViewModelBlurAmount >= 0.01f )
+		{
+			m_flViewModelBlurAmount = FLerp( m_flViewModelBlurAmount, 0.0f, r_post_reload_blur_rate.GetFloat() );
+		}
+		else
+		{
+			return;
+		}
+	}
+
+	IMaterialVar *var;
+
+	IMaterial *pBlurX = materials->FindMaterial( "effects/shaders/screen_blurx", TEXTURE_GROUP_PIXEL_SHADERS, true );
+	IMaterial *pBlurY = materials->FindMaterial( "effects/shaders/screen_blury", TEXTURE_GROUP_PIXEL_SHADERS, true );
+
+	var = pBlurX->FindVar( "$BLURSIZE", NULL );
+	var->SetFloatValue( m_flViewModelBlurAmount );
+	var = pBlurY->FindVar( "$BLURSIZE", NULL );
+	var->SetFloatValue( m_flViewModelBlurAmount);
+
+	DrawScreenEffectMaterial( pBlurX, x, y, width, height );
+	DrawScreenEffectMaterial( pBlurY, x, y, width, height );
+}
 
 //-----------------------------------------------------------------------------
 //
