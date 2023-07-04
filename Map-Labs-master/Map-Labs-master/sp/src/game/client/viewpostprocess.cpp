@@ -2967,8 +2967,9 @@ void DoImageSpaceMotionBlur( const CViewSetup &viewSetup )
 	// Get these convars here to make it easier to remove them later and to default each client differently //
 	//======================================================================================================//
 	float flMotionBlurRotationIntensity = mat_motion_blur_rotation_intensity.GetFloat() * 0.15f; // The default is to not blur past 15% of the range
-	float flMotionBlurRollIntensity = 0.3f; // * mat_motion_blur_roll_intensity.GetFloat(); // The default is to not blur past 30% of the range
-	float flMotionBlurFallingIntensity = mat_motion_blur_falling_intensity.GetFloat();
+	float flMotionBlurRollIntensity = mat_motion_blur_roll_intensity.GetFloat(); // * mat_motion_blur_roll_intensity.GetFloat(); // The default is to not blur past 30% of the range
+	//float flMotionBlurFallingIntensity = mat_motion_blur_falling_intensity.GetFloat();
+	float flMotionBlurFallingIntensity = ForwardIntensity();
 	float flMotionBlurFallingMin = mat_motion_blur_falling_min.GetFloat();
 	float flMotionBlurFallingMax = mat_motion_blur_falling_max.GetFloat();
 	float flMotionBlurGlobalStrength = mat_motion_blur_strength.GetFloat();
