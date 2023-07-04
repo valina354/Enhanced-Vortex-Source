@@ -67,6 +67,12 @@ $Project
 		
 		$File	"pbr_dx9.cpp"
 		$File	"core_dx9.cpp"
+		$File	"chromatic.cpp"
+		$File	"unsharp.cpp"
+		$File	"ss_sunrays.cpp"
+		$File	"ssao.cpp"
+		$File	"ssao_combine.cpp"
+		$File	"gaussian_blur_3x3.cpp"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"

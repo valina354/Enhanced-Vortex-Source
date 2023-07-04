@@ -348,6 +348,9 @@ void CViewRender::LevelInit( void )
 
 	// Init all IScreenSpaceEffects
 	g_pScreenSpaceEffects->InitScreenSpaceEffects( );
+
+	g_pScreenSpaceEffects->EnableScreenSpaceEffect("c17_healthfx");
+	g_pScreenSpaceEffects->EnableScreenSpaceEffect("c17_unsharp");
 }
 
 //-----------------------------------------------------------------------------
@@ -355,6 +358,9 @@ void CViewRender::LevelInit( void )
 //-----------------------------------------------------------------------------
 void CViewRender::LevelShutdown( void )
 {
+	g_pScreenSpaceEffects->DisableScreenSpaceEffect("c17_healthfx");
+	g_pScreenSpaceEffects->DisableScreenSpaceEffect("c17_unsharp");
+
 	g_pScreenSpaceEffects->ShutdownScreenSpaceEffects( );
 }
 

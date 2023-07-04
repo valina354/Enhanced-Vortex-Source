@@ -62,14 +62,11 @@ public:
 	DEFINE_CUSTOM_AI;
 
 private:
-	Vector	m_vecSaveSpitVelocity;	// Saved when we start to attack and used if we failed to get a clear shot once we release
-	virtual bool GetSpitVector(const Vector& vecStartPos, const Vector& vecTarget, Vector* vecOut);
-	Vector VecCheckThrowTolerance(CBaseEntity* pEdict, const Vector& vecSpot1, Vector vecSpot2, float flSpeed, float flTolerance);
-
 
 	bool  m_fCanThreatDisplay;// this is so the squid only does the "I see a headcrab!" dance one time. 
 	float m_flLastHurtTime;// we keep track of this, because if something hurts a squid, it will forget about its love of headcrabs for a while.
 	float m_flNextSpitTime;// last time the bullsquid used the spit attack.
+	int   m_nSquidSpitSprite;
 	float m_flHungryTime;// set this is a future time to stop the monster from eating for a while. 
 
 	float m_nextSquidSoundTime;

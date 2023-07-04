@@ -53,6 +53,7 @@
 #include "clientmode_shared.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "client_virtualreality.h"
+#include "ShaderEditor/ShaderEditorSystem.h"
 
 #ifdef PORTAL
 //#include "C_Portal_Player.h"
@@ -109,6 +110,8 @@ extern bool g_bDumpRenderTargets;
 static ConVar cl_maxrenderable_dist("cl_maxrenderable_dist", "3000", FCVAR_CHEAT, "Max distance from the camera at which things will be rendered" );
 
 ConVar r_entityclips( "r_entityclips", "1" ); //FIXME: Nvidia drivers before 81.94 on cards that support user clip planes will have problems with this, require driver update? Detect and disable?
+
+ConVar r_post_sunshaft("r_post_sunshaft", "0", FCVAR_ARCHIVE);
 
 // Matches the version in the engine
 static ConVar r_drawopaqueworld( "r_drawopaqueworld", "1", FCVAR_CHEAT );
@@ -178,6 +181,31 @@ static ConVar pyro_dof( "pyro_dof", "1", FCVAR_ARCHIVE );
 #endif
 
 extern ConVar cl_leveloverview;
+
+#ifdef MAPBASE
+void ps30_shader_callback(IConVar *pConVar, char const *pOldString, float flOldValue)
+{
+	ConVarRef var(pConVar);
+
+	if (var.GetBool() && !(g_pMaterialSystemHardwareConfig->SupportsShaderModel_3_0()))
+	{
+		var.SetValue("0");
+		Warning("Your GPU does not support Shader Model 3.0! Changes undone!\n");
+	}
+}
+
+void ps20b_shader_callback(IConVar *pConVar, char const *pOldString, float flOldValue)
+{
+	ConVarRef var(pConVar);
+
+	if (var.GetBool() && !(g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_b()))
+	{
+		var.SetValue("0");
+		Warning("Your GPU does not support Shader Model 2.0b! Changes undone!\n");
+	}
+}
+ConVar r_post_complements("r_post_complements", "0", FCVAR_CHEAT, 0, ps20b_shader_callback);
+#endif
 
 extern ConVar localplayer_visionflags;
 
@@ -825,6 +853,10 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/motion_blur" )
 	CLIENTEFFECT_MATERIAL( "dev/upscale" )
 
+	CLIENTEFFECT_MATERIAL("dev/sunrays_to_screen")
+	CLIENTEFFECT_MATERIAL("dev/sunrayblurx")
+	CLIENTEFFECT_MATERIAL( "dev/sunrayblury" )
+
 #ifdef TF_CLIENT_DLL
 	CLIENTEFFECT_MATERIAL( "dev/pyro_blur_filter_y" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_blur_filter_x" )
@@ -1454,6 +1486,9 @@ void CViewRender::ViewDrawScene( bool bDrew3dSkybox, SkyboxVisibility_t nSkyboxV
 
 	// this allows the refract texture to be updated once per *scene* on 360
 	// (e.g. once for a monitor scene and once for the main scene)
+#ifdef MAPBASE
+	if ( /*viewID != VIEW_SUN_SHAFTS &&*/ viewID != VIEW_SHADOW_DEPTH_TEXTURE)
+#endif
 	g_viewscene_refractUpdateFrame = gpGlobals->framecount - 1;
 
 	g_pClientShadowMgr->PreRender();
@@ -1494,8 +1529,18 @@ void CViewRender::ViewDrawScene( bool bDrew3dSkybox, SkyboxVisibility_t nSkyboxV
 	}
 
 	ParticleMgr()->IncrementFrameCode();
+#ifdef MAPBASE
+	//if( CurrentViewID() == VIEW_SUN_SHAFTS )
+	CGlowOverlay::DrawOverlays(view.m_bCacheFullSceneState);
+#endif
 
 	DrawWorldAndEntities( drawSkybox, view, nClearFlags, pCustomVisibility );
+	
+	VisibleFogVolumeInfo_t fogVolumeInfo;
+	render->GetVisibleFogVolume( view.origin, &fogVolumeInfo );
+	WaterRenderInfo_t info;
+	DetermineWaterRenderInfo( fogVolumeInfo, info );
+	g_ShaderEditorSystem->CustomViewRender( &g_CurrentViewID, fogVolumeInfo, info );
 
 	// Disable fog for the rest of the stuff
 	DisableFog();
@@ -2151,6 +2196,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		if ( ( bDrew3dSkybox = pSkyView->Setup( view, &nClearFlags, &nSkyboxVisible ) ) != false )
 		{
 			AddViewToScene( pSkyView );
+			g_ShaderEditorSystem->UpdateSkymask(false, view.x, view.y, view.width, view.height);
 		}
 		SafeRelease( pSkyView );
 #endif
@@ -2244,6 +2290,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		if (!bDrawnViewmodel)
 #endif
 		DrawViewModels( view, whatToDraw & RENDERVIEW_DRAWVIEWMODEL );
+		
+		
 
 		DrawUnderwaterOverlay();
 
@@ -2281,6 +2329,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			}
 			pRenderContext.SafeRelease();
 		}
+		
+		g_ShaderEditorSystem->CustomPostRender();
 
 		// And here are the screen-space effects
 

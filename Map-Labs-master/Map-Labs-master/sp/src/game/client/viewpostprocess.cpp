@@ -16,6 +16,8 @@
 #include "postprocess_shared.h"
 #include "view_scene.h"
 #include "c_world.h"
+#include "c_sun.h"
+#include "ivieweffects.h"
 
 //Tony; new
 #include "c_baseplayer.h"

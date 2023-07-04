@@ -3,7 +3,7 @@ $Project
    $Folder	"HL3"
 		{
 		   $File	"$SRCDIR\game\server\npc_darkfusionantlion.cpp"
-		   $File	"$SRCDIR\game\server\npc_bullsquid.cpp"
+           $File	"$SRCDIR\game\server\npc_bullsquid.cpp"
 		   $File	"$SRCDIR\game\server\npc_bullsquid.h"
 		   $File	"$SRCDIR\game\server\npc_cockroach.cpp"
 		}

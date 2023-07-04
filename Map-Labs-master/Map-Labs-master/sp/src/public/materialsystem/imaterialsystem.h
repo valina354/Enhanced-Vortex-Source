@@ -70,7 +70,7 @@ typedef uint64 VertexFormat_t;
 #ifdef POSIX
 #define ABSOLUTE_MINIMUM_DXLEVEL 90
 #else
-#define ABSOLUTE_MINIMUM_DXLEVEL 80
+#define ABSOLUTE_MINIMUM_DXLEVEL 98
 #endif
 
 enum ShaderParamType_t 
@@ -380,7 +380,7 @@ struct MaterialSystem_SortInfo_t
 };
 
 
-#define MAX_FB_TEXTURES 4
+#define MAX_FB_TEXTURES 64
 
 //-----------------------------------------------------------------------------
 // Information about each adapter

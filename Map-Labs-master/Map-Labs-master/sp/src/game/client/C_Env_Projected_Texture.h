@@ -54,6 +54,10 @@ private:
 	bool IsBBoxVisible( Vector vecExtentsMin,
 						Vector vecExtentsMax );
 
+	IMesh	*m_pVolmetricMesh;
+	CMaterialReference m_matVolumetricsMaterial;
+
+
 	ClientShadowHandle_t m_LightHandle;
 	bool m_bForceUpdate;
 
@@ -87,6 +91,13 @@ private:
 	CTextureReference m_SpotlightTexture;
 	int			m_nSpotlightTextureFrame;
 	int			m_nShadowQuality;
+
+	FlashlightState_t	m_FlashlightState;
+	Vector m_vecRenderBoundsMin, m_vecRenderBoundsMax;
+
+
+	float m_flLastFOV;
+	int m_iCurrentVolumetricsSubDiv;
 #ifdef MAPBASE
 	float		m_flConstantAtten;
 	float		m_flLinearAtten;
