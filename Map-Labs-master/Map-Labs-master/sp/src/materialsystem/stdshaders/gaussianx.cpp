@@ -93,6 +93,11 @@ BEGIN_VS_SHADER( GaussianX, "Help for Gaussian X" )
 			pShaderAPI->SetPixelShaderConstant( 0, fBlurSize );
 
 			BindTexture( SHADER_SAMPLER0, FBTEXTURE, -1 );
+			// Pixel shader constant register 0 will contain the
+            // color passed in by the material. 
+            float c0[4];
+            params[BLURSIZE]->GetVecValue( c0, 4 );
+            pShaderAPI->SetPixelShaderConstant( 0, c0, ARRAYSIZE( c0 ) / 4 );
 			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 
