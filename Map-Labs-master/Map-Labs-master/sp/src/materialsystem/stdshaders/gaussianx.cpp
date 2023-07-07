@@ -16,16 +16,16 @@
 
 BEGIN_VS_SHADER( GaussianX, "Help for Gaussian X" )
 	BEGIN_SHADER_PARAMS
-		SHADER_PARAM( FBTEXTURE, SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "" )
+		SHADER_PARAM( BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "" )
 		SHADER_PARAM( BLURSIZE, SHADER_PARAM_TYPE_FLOAT, "1.0", "" )
 		SHADER_PARAM( RESDIVISOR, SHADER_PARAM_TYPE_INTEGER, "1", "" )
 	END_SHADER_PARAMS
 
 	SHADER_INIT
 	{
-		if( params[FBTEXTURE]->IsDefined() )
+		if( params[BASETEXTURE]->IsDefined() )
 		{
-			LoadTexture( FBTEXTURE );
+			LoadTexture( BASETEXTURE );
 		}
 	}
 
@@ -92,12 +92,13 @@ BEGIN_VS_SHADER( GaussianX, "Help for Gaussian X" )
 			fBlurSize[1] = fBlurSize[2] = fBlurSize[3] = fBlurSize[0];
 			pShaderAPI->SetPixelShaderConstant( 0, fBlurSize );
 
-			BindTexture( SHADER_SAMPLER0, FBTEXTURE, -1 );
-			// Pixel shader constant register 0 will contain the
-            // color passed in by the material. 
-            float c0[4];
-            params[BLURSIZE]->GetVecValue( c0, 4 );
-            pShaderAPI->SetPixelShaderConstant( 0, c0, ARRAYSIZE( c0 ) / 4 );
+			BindTexture( SHADER_SAMPLER0, BASETEXTURE, -1 );
+	        float c0[4];
+            params[RESDIVISOR]->GetVecValue( c0, 4 );
+			pShaderAPI->SetPixelShaderConstant( 0, c0, ARRAYSIZE( c0 ) / 4 );
+            float c1[4];
+            params[BLURSIZE]->GetVecValue( c1, 4 );
+            pShaderAPI->SetPixelShaderConstant( 0, c1, ARRAYSIZE( c1 ) / 4 );
 			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 
