@@ -865,8 +865,8 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_vignette" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_post" )
 	
-	CLIENTEFFECT_MATERIAL( "effects/shaders/screen_blurx" )
-	CLIENTEFFECT_MATERIAL( "effects/shaders/screen_blury" )
+	CLIENTEFFECT_MATERIAL( "effects/shaders/gaussianx" )
+	CLIENTEFFECT_MATERIAL( "effects/shaders/gaussiany" )
 	
 #endif
 
@@ -2660,8 +2660,8 @@ void CViewRender::PerformPreViewmodelPostProcessEffects( int x, int y, int width
 
 	IMaterialVar *var;
 
-	IMaterial *pBlurX = materials->FindMaterial( "effects/shaders/screen_blurx", TEXTURE_GROUP_PIXEL_SHADERS, true );
-	IMaterial *pBlurY = materials->FindMaterial( "effects/shaders/screen_blury", TEXTURE_GROUP_PIXEL_SHADERS, true );
+	IMaterial *pBlurX = materials->FindMaterial( "effects/shaders/gaussianx", TEXTURE_GROUP_PIXEL_SHADERS, true );
+	IMaterial *pBlurY = materials->FindMaterial( "effects/shaders/gaussiany", TEXTURE_GROUP_PIXEL_SHADERS, true );
 
 	var = pBlurX->FindVar( "$BLURSIZE", NULL );
 	var->SetFloatValue( m_flViewModelBlurAmount );
