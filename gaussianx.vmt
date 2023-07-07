@@ -1,0 +1,6 @@
+"gaussianx"
+{
+"$PIXSHADER"            "gaussianx_ps2x"
+"$BASETEXTURE"          "_rt_FullFrameFB"
+"$BLURSIZE " "1"
+}
