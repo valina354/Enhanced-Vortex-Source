@@ -2,7 +2,7 @@
 #include "common_ps_fxc.h"
 
 sampler2D sceneSampler	: register( s0 );
-const float blurSize	: register( c1 );
+const float blurSize	: register( c0 );
 
 
 
