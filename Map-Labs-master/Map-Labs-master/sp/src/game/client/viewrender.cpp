@@ -864,13 +864,8 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_vignette_border" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_vignette" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_post" )
-<<<<<<< HEAD
 	
-	CLIENTEFFECT_MATERIAL( "effects/shaders/gaussianx" )
-	CLIENTEFFECT_MATERIAL( "effects/shaders/gaussiany" )
 	
-=======
->>>>>>> parent of df36572 (blur for reloading)
 #endif
 
 CLIENTEFFECT_REGISTER_END_CONDITIONAL( engine->GetDXSupportLevel() >= 90 )
@@ -2290,6 +2285,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			}
 		}
 
+
 		GetClientModeNormal()->DoPostScreenSpaceEffects( &view );
 
 		// Now actually draw the viewmodel
@@ -2617,53 +2613,6 @@ void CViewRender::Render2DEffectsPostHUD( const CViewSetup &view )
 }
 
 
-<<<<<<< HEAD
-void CViewRender::PerformPreViewmodelPostProcessEffects( int x, int y, int width, int height )
-{
-	if( !r_post_reload_blur.GetBool() )
-		return;
-
-	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
-
-	if( !player || !player->GetActiveWeapon() )
-		return;
-
-	bool blurstate = player->GetActiveWeapon()->GetBlurState();
-
-	if( blurstate )
-	{
-		if( m_flViewModelBlurAmount != r_post_reload_blur_amount.GetFloat() )
-		{
-			m_flViewModelBlurAmount = FLerp( m_flViewModelBlurAmount, r_post_reload_blur_amount.GetFloat(), r_post_reload_blur_rate.GetFloat() );
-		}
-	}
-	else
-	{
-		if( m_flViewModelBlurAmount >= 0.01f )
-		{
-			m_flViewModelBlurAmount = FLerp( m_flViewModelBlurAmount, 0.0f, r_post_reload_blur_rate.GetFloat() );
-		}
-		else
-		{
-			return;
-		}
-	}
-
-	IMaterialVar *var;
-
-	IMaterial *pBlurX = materials->FindMaterial( "effects/shaders/gaussianx", TEXTURE_GROUP_PIXEL_SHADERS, true );
-	IMaterial *pBlurY = materials->FindMaterial( "effects/shaders/gaussiany", TEXTURE_GROUP_PIXEL_SHADERS, true );
-
-	var = pBlurX->FindVar( "$BLURSIZE", NULL );
-	var->SetFloatValue( m_flViewModelBlurAmount );
-	var = pBlurY->FindVar( "$BLURSIZE", NULL );
-	var->SetFloatValue( m_flViewModelBlurAmount);
-
-	DrawScreenEffectMaterial( pBlurX, x, y, width, height );
-	DrawScreenEffectMaterial( pBlurY, x, y, width, height );
-}
-=======
->>>>>>> parent of df36572 (blur for reloading)
 
 //-----------------------------------------------------------------------------
 //

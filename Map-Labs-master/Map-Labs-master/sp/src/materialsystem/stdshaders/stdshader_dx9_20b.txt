@@ -103,9 +103,6 @@ depth_of_field_vs20.fxc
 
 blurgaussian_3x3_ps2x.fxc
 
-gaussianx_ps2x.fxc
-gaussiany_ps2x.fxc
-
 pbr_ps20b.fxc
 pbr_vs20b.fxc
 
