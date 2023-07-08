@@ -94,9 +94,6 @@ BEGIN_VS_SHADER( GaussianY, "Help for Gaussian Y" )
 
 			BindTexture( SHADER_SAMPLER0, BASETEXTURE, -1 );
 
-	    float c0[4];
-            params[RESDIVISOR]->GetVecValue( c0, 4 );
-			pShaderAPI->SetPixelShaderConstant( 0, c0, ARRAYSIZE( c0 ) / 4 );
             float c1[4];
             params[BLURSIZE]->GetVecValue( c1, 4 );
             pShaderAPI->SetPixelShaderConstant( 0, c1, ARRAYSIZE( c1 ) / 4 );
