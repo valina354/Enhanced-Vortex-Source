@@ -864,10 +864,13 @@ CLIENTEFFECT_REGISTER_BEGIN( PrecachePostProcessingEffects )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_vignette_border" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_vignette" )
 	CLIENTEFFECT_MATERIAL( "dev/pyro_post" )
+<<<<<<< HEAD
 	
 	CLIENTEFFECT_MATERIAL( "effects/shaders/gaussianx" )
 	CLIENTEFFECT_MATERIAL( "effects/shaders/gaussiany" )
 	
+=======
+>>>>>>> parent of df36572 (blur for reloading)
 #endif
 
 CLIENTEFFECT_REGISTER_END_CONDITIONAL( engine->GetDXSupportLevel() >= 90 )
@@ -998,7 +1001,6 @@ CViewRender::CViewRender()
 {
 	m_flCheapWaterStartDistance = 0.0f;
 	m_flCheapWaterEndDistance = 0.1f;
-	m_flViewModelBlurAmount = 0.0f;
 	m_BaseDrawFlags = 0;
 	m_pActiveRenderer = NULL;
 	m_pCurrentlyDrawingEntity = NULL;
@@ -2288,15 +2290,6 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			}
 		}
 
-if ( !building_cubemaps.GetBool() )
-		{
-			if ( view.m_bDoBloomAndToneMapping )
-			{
-				PerformPreViewmodelPostProcessEffects( view.x, view.y, view.width, view.height );
-			}
-		}
-
-
 		GetClientModeNormal()->DoPostScreenSpaceEffects( &view );
 
 		// Now actually draw the viewmodel
@@ -2623,10 +2616,8 @@ void CViewRender::Render2DEffectsPostHUD( const CViewSetup &view )
 {
 }
 
-ConVar r_post_reload_blur( "r_post_reload_blur", "1", FCVAR_ARCHIVE );
-ConVar r_post_reload_blur_amount( "r_post_reload_blur_amount", "2.0", FCVAR_CHEAT );
-ConVar r_post_reload_blur_rate( "r_post_reload_blur_rate", "0.1", FCVAR_CHEAT );
 
+<<<<<<< HEAD
 void CViewRender::PerformPreViewmodelPostProcessEffects( int x, int y, int width, int height )
 {
 	if( !r_post_reload_blur.GetBool() )
@@ -2671,6 +2662,8 @@ void CViewRender::PerformPreViewmodelPostProcessEffects( int x, int y, int width
 	DrawScreenEffectMaterial( pBlurX, x, y, width, height );
 	DrawScreenEffectMaterial( pBlurY, x, y, width, height );
 }
+=======
+>>>>>>> parent of df36572 (blur for reloading)
 
 //-----------------------------------------------------------------------------
 //

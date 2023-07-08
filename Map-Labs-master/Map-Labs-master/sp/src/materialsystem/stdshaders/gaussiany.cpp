@@ -94,9 +94,9 @@ BEGIN_VS_SHADER( GaussianY, "Help for Gaussian Y" )
 
 			BindTexture( SHADER_SAMPLER0, BASETEXTURE, -1 );
 
-            float c0[4];
-            params[BLURSIZE]->GetVecValue( c0, 4 );
-            pShaderAPI->SetPixelShaderConstant( 0, c1, ARRAYSIZE( c0 ) / 4 );
+            float c1[4];
+            params[BLURSIZE]->GetVecValue( c1, 4 );
+            pShaderAPI->SetPixelShaderConstant( 0, c1, ARRAYSIZE( c1 ) / 4 );
 			DECLARE_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 			SET_DYNAMIC_VERTEX_SHADER( sdk_screenspaceeffect_vs20 );
 

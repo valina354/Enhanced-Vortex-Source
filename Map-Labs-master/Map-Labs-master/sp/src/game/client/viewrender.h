@@ -380,7 +380,6 @@ public:
 	virtual void	Render2DEffectsPreHUD( const CViewSetup &view );
 	virtual void	Render2DEffectsPostHUD( const CViewSetup &view );
 
-void			PerformPreViewmodelPostProcessEffects( int x, int y, int width, int height );
 
 	void			DisableFog( void );
 
@@ -528,7 +527,6 @@ private:
 	Vector			m_vecLastFacing;
 	float			m_flCheapWaterStartDistance;
 	float			m_flCheapWaterEndDistance;
-    float			m_flViewModelBlurAmount;
 
 	CViewSetup			m_OverlayViewSetup;
 	int					m_OverlayClearFlags;

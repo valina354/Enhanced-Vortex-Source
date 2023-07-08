@@ -86,8 +86,6 @@ CBaseCombatWeapon::CBaseCombatWeapon()
 	m_iSecondaryAmmoType = -1;
 #endif
 
-m_bReloadBlur = false;
-
 #if !defined( CLIENT_DLL )
 	m_pConstraint = NULL;
 	OnBaseCombatWeaponCreated( this );
@@ -1275,13 +1273,6 @@ void CBaseCombatWeapon::Equip( CBaseCombatCharacter *pOwner )
 
 	m_flNextPrimaryAttack		= gpGlobals->curtime;
 	m_flNextSecondaryAttack		= gpGlobals->curtime;
-	
-	#ifndef CLIENT_DLL
-	m_flReloadTime				= gpGlobals->curtime;
-#endif
-
-	m_bReloadBlur				= false;
-	
 	SetTouch( NULL );
 	SetThink( NULL );
 #if !defined( CLIENT_DLL )
@@ -1716,12 +1707,6 @@ bool CBaseCombatWeapon::DefaultDeploy( char *szViewModel, char *szWeaponModel, i
 	m_flNextPrimaryAttack	= gpGlobals->curtime + SequenceDuration();
 	m_flNextSecondaryAttack	= gpGlobals->curtime + SequenceDuration();
 	m_flHudHintMinDisplayTime = 0;
-
-#ifndef CLIENT_DLL
-	m_flReloadTime			= gpGlobals->curtime;
-#endif
-
-	m_bReloadBlur = false;
 
 	m_bAltFireHudHintDisplayed = false;
 	m_bReloadHudHintDisplayed = false;
@@ -2240,17 +2225,6 @@ void CBaseCombatWeapon::ItemPostFrame( void )
 			WeaponIdle();
 		}
 	}
-	
-	#ifndef CLIENT_DLL
-	if( m_flReloadTime > gpGlobals->curtime )
-	{
-		m_bReloadBlur = true;
-	}
-	else
-	{
-		m_bReloadBlur = false;
-	}
-#endif
 }
 
 void CBaseCombatWeapon::HandleFireOnEmpty()
@@ -2484,10 +2458,6 @@ bool CBaseCombatWeapon::DefaultReload( int iClipSize1, int iClipSize2, int iActi
 	float flSequenceEndTime = gpGlobals->curtime + SequenceDuration();
 	pOwner->SetNextAttack( flSequenceEndTime );
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = flSequenceEndTime;
-
-#ifndef CLIENT_DLL
-	m_flReloadTime = m_flNextPrimaryAttack;
-#endif
 
 	m_bInReload = true;
 
@@ -3077,8 +3047,6 @@ BEGIN_PREDICTION_DATA( CBaseCombatWeapon )
 	DEFINE_FIELD( m_iPrimaryAmmoCount, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iSecondaryAmmoCount, FIELD_INTEGER ),
 
-    DEFINE_FIELD( m_bReloadBlur, FIELD_BOOLEAN ),
-
 	//DEFINE_PHYSPTR( m_pConstraint ),
 
 	// DEFINE_FIELD( m_iOldState, FIELD_INTEGER ),
@@ -3396,9 +3364,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalActiveWeaponData )
 	SendPropInt( SENDINFO( m_nNextThinkTick ) ),
 	SendPropTime( SENDINFO( m_flTimeWeaponIdle ) ),
 
-    SendPropBool( SENDINFO( m_bReloadBlur ) ),
-
-
 #if defined( TF_DLL )
 	SendPropExclude( "DT_AnimTimeMustBeFirst" , "m_flAnimTime" ),
 #endif
@@ -3408,8 +3373,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CBaseCombatWeapon, DT_LocalActiveWeaponData )
 	RecvPropTime( RECVINFO( m_flNextSecondaryAttack ) ),
 	RecvPropInt( RECVINFO( m_nNextThinkTick ) ),
 	RecvPropTime( RECVINFO( m_flTimeWeaponIdle ) ),
-	
-	RecvPropBool( RECVINFO( m_bReloadBlur ) ),
 #endif
 END_NETWORK_TABLE()
 
