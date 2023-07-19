@@ -438,6 +438,12 @@ public:
 	{
 		m_UnderWaterOverlayMaterial.Init( pMaterial );
 	}
+	
+	protected:
+	void			PerformScreenSpaceEffects(int x, int y, int w, int h);
+	virtual void DoCustomPostProcessing(const CViewSetup &view) {}
+
+	
 private:
 	int				m_BuildWorldListsNumber;
 
@@ -461,7 +467,7 @@ private:
 	bool			ShouldDrawViewModel( bool drawViewmodel );
 	void			DrawViewModels( const CViewSetup &view, bool drawViewmodel );
 
-	void			PerformScreenSpaceEffects( int x, int y, int w, int h );
+	//void			PerformScreenSpaceEffects( int x, int y, int w, int h );
 
 	// Overlays
 	void			SetScreenOverlayMaterial( IMaterial *pMaterial );

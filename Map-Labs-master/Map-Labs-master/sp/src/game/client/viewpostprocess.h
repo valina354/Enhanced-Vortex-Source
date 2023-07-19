@@ -16,6 +16,7 @@ struct PostProcessParameters_t;
 void DoEnginePostProcessing( int x, int y, int w, int h, bool bFlashlightIsOn, bool bPostVGui = false );
 void DoImageSpaceMotionBlur( const CViewSetup &viewSetup );
 void DumpTGAofRenderTarget( const int width, const int height, const char *pFilename );
+bool DoSunAndGlowEffects(int x, int y, int w, int h);
 
 void SetRenderTargetAndViewPort( ITexture *rt );
 

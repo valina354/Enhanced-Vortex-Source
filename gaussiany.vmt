@@ -1,6 +1,0 @@
-"gaussiany"
-{
-"$PIXSHADER"            "gaussiany_ps2x"
-"$BASETEXTURE"          "_rt_FullFrameFB"
-"$BLURSIZE " "1"
-}
