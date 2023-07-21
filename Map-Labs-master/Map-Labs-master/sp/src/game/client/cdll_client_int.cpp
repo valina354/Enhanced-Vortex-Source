@@ -301,7 +301,6 @@ class CHudChat;
 class CViewRender;
 extern CViewRender g_DefaultViewRender;
 extern CDFViewRender g_ViewRender;
-view = ( IViewRender * )&g_DefaultViewRender;
 
 extern void StopAllRumbleEffects( void );
 
