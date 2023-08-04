@@ -73,11 +73,8 @@ $Project
 		$File	"ssao.cpp"
 		$File	"ssao_combine.cpp"
 		$File	"gaussian_blur_3x3.cpp"
-		$File	"ss_sunrays.cpp"
-		$File	"skymask.cpp"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"
 	//$Shaders	"mapbase_dx9_30.txt"
-	$Shaders    "sunrays.txt"
 }

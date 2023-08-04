@@ -105,3 +105,5 @@ blurgaussian_3x3_ps2x.fxc
 
 pbr_ps20b.fxc
 pbr_vs20b.fxc
+
+blurgaussian_3x3_ps2x.fxc

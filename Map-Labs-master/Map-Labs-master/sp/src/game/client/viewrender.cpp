@@ -111,7 +111,7 @@ static ConVar cl_maxrenderable_dist("cl_maxrenderable_dist", "3000", FCVAR_CHEAT
 
 ConVar r_entityclips( "r_entityclips", "1" ); //FIXME: Nvidia drivers before 81.94 on cards that support user clip planes will have problems with this, require driver update? Detect and disable?
 
-ConVar r_post_sunshaft("r_post_sunshaft", "0", FCVAR_CHEAT);
+ConVar r_post_sunshaft("r_post_sunshaft", "0", FCVAR_ARCHIVE);
 
 // Matches the version in the engine
 static ConVar r_drawopaqueworld( "r_drawopaqueworld", "1", FCVAR_CHEAT );
@@ -152,7 +152,6 @@ static ConVar fog_colorskybox( "fog_colorskybox", "-1 -1 -1", FCVAR_CHEAT );
 static ConVar fog_enableskybox( "fog_enableskybox", "1", FCVAR_CHEAT );
 static ConVar fog_maxdensity( "fog_maxdensity", "-1", FCVAR_CHEAT );
 
-extern void UpdateViewMask(const CViewSetup &view, bool VIEWMODEL, bool combine);
 
 //-----------------------------------------------------------------------------
 // Water-related convars
@@ -2288,28 +2287,12 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 
 		GetClientModeNormal()->DoPostScreenSpaceEffects( &view );
-		
-		// steve - do we even need the viewmask stuff anymore when rendering with depth?
-		// Steve - the viewmask is perf poopy, needs a rewrite
-		VPROF_SCOPE_BEGIN("UpdateViewMask::ViewModel[0]");
-		UpdateViewMask(view, true, false);
-		VPROF_SCOPE_END();
-
 
 		// Now actually draw the viewmodel
 #ifdef MAPBASE
 		if (!bDrawnViewmodel)
 #endif
 		DrawViewModels( view, whatToDraw & RENDERVIEW_DRAWVIEWMODEL );
-		
-		VPROF_SCOPE_BEGIN("UpdateViewMask::SkyMask[1]");
-		UpdateViewMask(view, false, bDrew3dSkybox);		//COMBINE SKY MASK
-		VPROF_SCOPE_END();
-		VPROF_SCOPE_BEGIN("UpdateViewMask::ViewModel[1]");
-		UpdateViewMask(view, true, true);
-		VPROF_SCOPE_END();
-
-
 		
 		
 
@@ -2349,13 +2332,6 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			}
 			pRenderContext.SafeRelease();
 		}
-		
-		// Steve - custom effects here.
-		if (!building_cubemaps.GetBool() && view.m_bDoBloomAndToneMapping)	
-			DoCustomPostProcessing(view);
-
-		// Prevent sound stutter if going slow
-		engine->Sound_ExtraUpdate();
 		
 		g_ShaderEditorSystem->CustomPostRender();
 
@@ -3308,9 +3284,6 @@ void CViewRender::ViewDrawScene_Intro( const CViewSetup &view, int nClearFlags, 
 		if ( ( bDrew3dSkybox = pSkyView->Setup( view, &nClearFlags, &nSkyboxVisible ) ) != false )
 		{
 			AddViewToScene( pSkyView );
-			VPROF_SCOPE_BEGIN("UpdateViewMask::SkyMask[0]");
-			UpdateViewMask(view, false, false);	//UPDATE SKY MASK
-			VPROF_SCOPE_END();
 		}
 		SafeRelease( pSkyView );
 	}
@@ -5497,7 +5470,7 @@ void CSkyboxView::DrawInternal( view_id_t iSkyBoxViewID, bool bInvokePreAndPostR
 	}
 
 	render->BeginUpdateLightmaps();
-	BuildWorldRenderLists( true, -1, true );
+	BuildWorldRenderLists( true, true, -1 );
 	BuildRenderableRenderLists( iSkyBoxViewID );
 	render->EndUpdateLightmaps();
 
