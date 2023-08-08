@@ -84,5 +84,27 @@ public:
 																CScreenSpaceEffectRegistration pEffectName##_reg( #pEffectName, &pEffectName##_effect );	
 
 
+#define FXAA_TYPE2
+
+class CFXAA : public IScreenSpaceEffect
+{
+public:
+	CFXAA(void) { };
+
+	virtual void Init(void);
+	virtual void Shutdown(void);
+	virtual void SetParameters(KeyValues *params) {};
+	virtual void Enable(bool bEnable) { m_bEnabled = bEnable; }
+	virtual bool IsEnabled() { return m_bEnabled; }
+
+	virtual void Render(int x, int y, int w, int h);
+
+private:
+	bool				m_bEnabled;
+
+	CMaterialReference	m_Luma;
+	CMaterialReference	m_FXAA;
+};
+
 
 #endif

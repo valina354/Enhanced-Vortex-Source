@@ -65,14 +65,14 @@ $Project
 		$File	"engine_post_dx9.cpp"
 		$File	"depthoffield_dx9.cpp"
 		
-		$File	"pbr_dx9.cpp"
 		$File	"core_dx9.cpp"
+		$File	"vignetting.cpp"
 		$File	"chromatic.cpp"
+		$File	"luma.cpp"
+		$File	"fxxa.cpp"
 		$File	"unsharp.cpp"
-		$File	"ss_sunrays.cpp"
-		$File	"ssao.cpp"
-		$File	"ssao_combine.cpp"
-		$File	"gaussian_blur_3x3.cpp"
+		$File	"unsharp_blur.cpp"
+		$File	"screenwater.cpp"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"

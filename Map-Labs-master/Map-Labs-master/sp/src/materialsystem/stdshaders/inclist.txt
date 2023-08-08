@@ -1,2 +1,10 @@
-fxctmp9_tmp\pbr_ps30.inc
-fxctmp9_tmp\pbr_vs30.inc
+fxctmp9_tmp\fxaa_ps30.inc
+fxctmp9_tmp\fxaa_vs30.inc
+fxctmp9_tmp\luma_ps30.inc
+fxctmp9_tmp\screenspace_simple_vs30.inc
+fxctmp9_tmp\ssao_vs30.inc
+fxctmp9_tmp\ssao_blur_ps30.inc
+fxctmp9_tmp\ssao_combine_ps30.inc
+fxctmp9_tmp\ssao_final_ps30.inc
+fxctmp9_tmp\ssao_ps30.inc
+fxctmp9_tmp\ssao_unsharp_ps30.inc

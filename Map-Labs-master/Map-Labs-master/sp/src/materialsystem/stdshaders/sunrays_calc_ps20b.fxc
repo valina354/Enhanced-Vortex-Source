@@ -47,7 +47,7 @@ PS_OUTPUT main( const PS_INPUT In )
 	float2 _var1 = In.vTexCoord_0;
 
 	float2 _sunPos = In.vTexCoord_0 - g_cData_sun_data.xy;
-	_sunDot = saturate( g_cData_sun_data.z );
+	float2 _sunDot = saturate( g_cData_sun_data.z );
 	float _var5 = length( _sunPos );
 	float2 _var6 = _sunPos;// / _var5;
 	//float _var7 = smoothstep( float( 0.000000 ), float( 0.700000 ), _var5 );
@@ -72,9 +72,9 @@ PS_OUTPUT main( const PS_INPUT In )
 		_var1 = _var1 - _var6;
 		float4 _texLookup_26 = tex2D( _Sampler_00, _var1 );
 		//sampleColor = sampleColor * _texLookup_26.a;
-		sampleColor = _texLookup_26.rgb * _rayStrength * _texLookup_26.a;
+		float sampleColor = _texLookup_26.rgb * _rayStrength * _texLookup_26.a;
 
-		sampleColor.rgb *= illuminationDecay * weight;
+		sampleColor *= illuminationDecay * weight;
 
         illuminationDecay *= decay;
 		_var0 += sampleColor;

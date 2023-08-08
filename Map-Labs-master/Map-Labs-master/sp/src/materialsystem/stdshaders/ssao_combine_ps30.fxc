@@ -1,21 +1,31 @@
+// Includes
 #include "common_ps_fxc.h"
 
-sampler ssaosampler			: register( s0 );
-sampler framebuffersampler		: register( s1 );
+sampler 		frameSampler				: register( s0 );
+sampler 		passSampler					: register( s1 );
 
-struct PS_INPUT
+const float2	luminosity_threshold		: register( c0 );
+
+// Structs
+struct VS_OUTPUT
 {
-	HALF2 vTexCoord			:	TEXCOORD0;
+   	float4 Position   : POSITION;
+    float2 TexCoord0  : TEXCOORD0;
 };
 
-float4 main( PS_INPUT i ) : COLOR
+float4 main( VS_OUTPUT IN ) : COLOR0
 {
-	float4 framebuftex = tex2D( framebuffersampler, i.vTexCoord );
-	float3 framebufcol = framebuftex.rgb;
-	float framebufalpha = framebuftex.a;
-	float ssaotex = tex2D( ssaosampler, i.vTexCoord ).r;
+   float3 color = tex2D(frameSampler, IN.TexCoord0).rgb;
+   float ao = tex2D(passSampler, IN.TexCoord0/2).r;
 
-	framebufcol = framebufcol * ssaotex;
+   float luminance = color.r*0.3+color.g*0.59+color.b*0.11;
+   float white = 1.0;
+   float black = 0;
 
-	return float4( framebufcol, framebufalpha );
+   luminance = clamp(max(black,luminance-luminosity_threshold)+max(black,luminance-luminosity_threshold)+max(black,luminance-luminosity_threshold),0.0,1.0);
+   ao = lerp(ao,white,luminance);
+
+   color *= ao;
+
+   return float4(color,1);
 }

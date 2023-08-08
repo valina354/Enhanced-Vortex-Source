@@ -213,7 +213,7 @@ public:
 	virtual bool				ShouldReceiveProjectedTextures( int flags );
 #else
 	// Should this object cast shadows?
-	virtual ShadowType_t ShadowCastType() { return SHADOWS_RENDER_TO_TEXTURE_DYNAMIC; }
+	virtual ShadowType_t ShadowCastType() { return SHADOWS_RENDER_TO_DEPTH_TEXTURE; }
 
 	virtual bool				ShouldReceiveProjectedTextures( int flags )
 	{
@@ -307,6 +307,9 @@ public:
 	// Is the player dead?
 	bool				IsPlayerDead();
 	bool				IsPoisoned( void ) { return m_Local.m_bPoisoned; }
+
+	bool				ShouldDisplayMuzzleLight();
+	void				DisplayMuzzleLight();
 
 	C_BaseEntity				*GetUseEntity();
 
@@ -530,6 +533,8 @@ private:
 	EHANDLE			m_hUseEntity;
 	
 	float			m_flMaxspeed;
+
+	float			m_flMuzzleFlashTime;
 
 	int				m_iBonusProgress;
 	int				m_iBonusChallenge;

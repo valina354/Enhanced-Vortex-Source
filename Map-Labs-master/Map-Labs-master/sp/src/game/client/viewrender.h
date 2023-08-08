@@ -380,6 +380,8 @@ public:
 	virtual void	Render2DEffectsPreHUD( const CViewSetup &view );
 	virtual void	Render2DEffectsPostHUD( const CViewSetup &view );
 
+	void			PerformNightvision(int x, int y, int width, int height);
+
 
 	void			DisableFog( void );
 

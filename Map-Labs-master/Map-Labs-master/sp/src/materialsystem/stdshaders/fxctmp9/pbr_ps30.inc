@@ -128,27 +128,6 @@ public:
 #endif
 	}
 private:
-	int m_nPCC;
-#ifdef _DEBUG
-	bool m_bPCC;
-#endif
-public:
-	void SetPCC( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nPCC = i;
-#ifdef _DEBUG
-		m_bPCC = true;
-#endif
-	}
-	void SetPCC( bool i )
-	{
-		m_nPCC = i ? 1 : 0;
-#ifdef _DEBUG
-		m_bPCC = true;
-#endif
-	}
-private:
 	int m_nHSV;
 #ifdef _DEBUG
 	bool m_bHSV;
@@ -218,10 +197,6 @@ public:
 #endif // _DEBUG
 		m_nWVT = 0;
 #ifdef _DEBUG
-		m_bPCC = false;
-#endif // _DEBUG
-		m_nPCC = 0;
-#ifdef _DEBUG
 		m_bHSV = false;
 #endif // _DEBUG
 		m_nHSV = 0;
@@ -235,13 +210,13 @@ public:
 		// Asserts to make sure that we aren't using any skipped combinations.
 		// Asserts to make sure that we are setting all of the combination vars.
 #ifdef _DEBUG
-		bool bAllStaticVarsDefined = m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bLIGHTMAPPED && m_bEMISSIVE && m_bPARALLAXOCCLUSION && m_bWVT && m_bPCC && m_bHSV && m_bHSV_BLEND;
+		bool bAllStaticVarsDefined = m_bFLASHLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bLIGHTMAPPED && m_bEMISSIVE && m_bPARALLAXOCCLUSION && m_bWVT && m_bHSV && m_bHSV_BLEND;
 		Assert( bAllStaticVarsDefined );
 #endif // _DEBUG
-		return ( 160 * m_nFLASHLIGHT ) + ( 320 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 960 * m_nLIGHTMAPPED ) + ( 1920 * m_nEMISSIVE ) + ( 3840 * m_nPARALLAXOCCLUSION ) + ( 7680 * m_nWVT ) + ( 15360 * m_nPCC ) + ( 30720 * m_nHSV ) + ( 61440 * m_nHSV_BLEND ) + 0;
+		return ( 80 * m_nFLASHLIGHT ) + ( 160 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 480 * m_nLIGHTMAPPED ) + ( 960 * m_nEMISSIVE ) + ( 1920 * m_nPARALLAXOCCLUSION ) + ( 3840 * m_nWVT ) + ( 7680 * m_nHSV ) + ( 15360 * m_nHSV_BLEND ) + 0;
 	}
 };
-#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_PARALLAXOCCLUSION + psh_forgot_to_set_static_WVT + psh_forgot_to_set_static_PCC + psh_forgot_to_set_static_HSV + psh_forgot_to_set_static_HSV_BLEND + 0
+#define shaderStaticTest_pbr_ps30 psh_forgot_to_set_static_FLASHLIGHT + psh_forgot_to_set_static_FLASHLIGHTDEPTHFILTERMODE + psh_forgot_to_set_static_LIGHTMAPPED + psh_forgot_to_set_static_EMISSIVE + psh_forgot_to_set_static_PARALLAXOCCLUSION + psh_forgot_to_set_static_WVT + psh_forgot_to_set_static_HSV + psh_forgot_to_set_static_HSV_BLEND + 0
 class pbr_ps30_Dynamic_Index
 {
 private:
@@ -349,27 +324,6 @@ public:
 		m_bFLASHLIGHTSHADOWS = true;
 #endif
 	}
-private:
-	int m_nLIGHTMAPPED_MODEL;
-#ifdef _DEBUG
-	bool m_bLIGHTMAPPED_MODEL;
-#endif
-public:
-	void SetLIGHTMAPPED_MODEL( int i )
-	{
-		Assert( i >= 0 && i <= 1 );
-		m_nLIGHTMAPPED_MODEL = i;
-#ifdef _DEBUG
-		m_bLIGHTMAPPED_MODEL = true;
-#endif
-	}
-	void SetLIGHTMAPPED_MODEL( bool i )
-	{
-		m_nLIGHTMAPPED_MODEL = i ? 1 : 0;
-#ifdef _DEBUG
-		m_bLIGHTMAPPED_MODEL = true;
-#endif
-	}
 public:
 	pbr_ps30_Dynamic_Index()
 	{
@@ -393,20 +347,16 @@ public:
 		m_bFLASHLIGHTSHADOWS = false;
 #endif // _DEBUG
 		m_nFLASHLIGHTSHADOWS = 0;
-#ifdef _DEBUG
-		m_bLIGHTMAPPED_MODEL = false;
-#endif // _DEBUG
-		m_nLIGHTMAPPED_MODEL = 0;
 	}
 	int GetIndex()
 	{
 		// Asserts to make sure that we aren't using any skipped combinations.
 		// Asserts to make sure that we are setting all of the combination vars.
 #ifdef _DEBUG
-		bool bAllDynamicVarsDefined = m_bWRITEWATERFOGTODESTALPHA && m_bPIXELFOGTYPE && m_bNUM_LIGHTS && m_bWRITE_DEPTH_TO_DESTALPHA && m_bFLASHLIGHTSHADOWS && m_bLIGHTMAPPED_MODEL;
+		bool bAllDynamicVarsDefined = m_bWRITEWATERFOGTODESTALPHA && m_bPIXELFOGTYPE && m_bNUM_LIGHTS && m_bWRITE_DEPTH_TO_DESTALPHA && m_bFLASHLIGHTSHADOWS;
 		Assert( bAllDynamicVarsDefined );
 #endif // _DEBUG
-		return ( 1 * m_nWRITEWATERFOGTODESTALPHA ) + ( 2 * m_nPIXELFOGTYPE ) + ( 4 * m_nNUM_LIGHTS ) + ( 20 * m_nWRITE_DEPTH_TO_DESTALPHA ) + ( 40 * m_nFLASHLIGHTSHADOWS ) + ( 80 * m_nLIGHTMAPPED_MODEL ) + 0;
+		return ( 1 * m_nWRITEWATERFOGTODESTALPHA ) + ( 2 * m_nPIXELFOGTYPE ) + ( 4 * m_nNUM_LIGHTS ) + ( 20 * m_nWRITE_DEPTH_TO_DESTALPHA ) + ( 40 * m_nFLASHLIGHTSHADOWS ) + 0;
 	}
 };
-#define shaderDynamicTest_pbr_ps30 psh_forgot_to_set_dynamic_WRITEWATERFOGTODESTALPHA + psh_forgot_to_set_dynamic_PIXELFOGTYPE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_WRITE_DEPTH_TO_DESTALPHA + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + psh_forgot_to_set_dynamic_LIGHTMAPPED_MODEL + 0
+#define shaderDynamicTest_pbr_ps30 psh_forgot_to_set_dynamic_WRITEWATERFOGTODESTALPHA + psh_forgot_to_set_dynamic_PIXELFOGTYPE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_WRITE_DEPTH_TO_DESTALPHA + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + 0

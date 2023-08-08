@@ -68,7 +68,7 @@ ConVar debug_latch_reset_onduck( "debug_latch_reset_onduck", "1", FCVAR_CHEAT );
 // Camera Bob
 ConVar cl_viewbob_enabled("cl_viewbob_enabled", "1", 0, "Oscillation Toggle");
 ConVar cl_viewbob_timer("cl_viewbob_timer", "10", 0, "Speed of Oscillation");
-ConVar cl_viewbob_scale("cl_viewbob_scale", "0.05", 0, "Magnitude of Oscillation");
+ConVar cl_viewbob_scale("cl_viewbob_scale", "0.01", 0, "Magnitude of Oscillation");
 
 // [MD] I'll remove this eventually. For now, I want the ability to A/B the optimizations.
 bool g_bMovementOptimizations = true;
@@ -4678,6 +4678,16 @@ void CGameMovement::PlayerMove( void )
 		mv->m_vecVelocity[0], mv->m_vecVelocity[1], mv->m_vecVelocity[2]);
 
 #endif
+
+	// Slow down, I'm pulling it! (a box maybe) but only when I'm standing on ground
+	if ((player->GetGroundEntity() != NULL) && (mv->m_nButtons & IN_USE) && !m_iSpeedCropped)
+	{
+		float frac = 0.33333333f;
+		mv->m_flForwardMove *= frac;
+		mv->m_flSideMove *= frac;
+		mv->m_flUpMove *= frac;
+		m_iSpeedCropped = true;
+	}
 
 	// Handle movement modes.
 	switch (player->GetMoveType())

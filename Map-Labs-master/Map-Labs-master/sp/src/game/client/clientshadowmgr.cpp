@@ -3001,7 +3001,7 @@ void CClientShadowMgr::BuildFlashlight( ClientShadowHandle_t handle )
 	// For the 360, we just draw flashlights with the main geometry
 	// and bypass the entire shadow casting system.
 	ClientShadow_t &shadow = m_Shadows[handle];
-	if ( IsX360() || r_flashlight_version2.GetInt() )
+	if (IsX360() || r_flashlight_version2.GetInt())
 	{
 		// This will update the matrices, but not do work to add the flashlight to surfaces
 		shadowmgr->ProjectFlashlight( shadow.m_ShadowHandle, shadow.m_WorldToShadow, 0, NULL );
@@ -4376,7 +4376,7 @@ void CClientShadowMgr::SetViewFlashlightState( int nActiveFlashlightCount, Clien
 	// NOTE: On the 360, we render the entire scene with the flashlight state
 	// set and don't render flashlights additively in the shadow mgr at a far later time
 	// because the CPU costs are prohibitive
-	if ( !IsX360() && !r_flashlight_version2.GetInt() )
+	if (!IsX360() && !r_flashlight_version2.GetInt())
 		return;
 
 	Assert( nActiveFlashlightCount<= 1 ); 

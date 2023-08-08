@@ -518,7 +518,7 @@ void C_BasePlayer::Spawn( void )
 	ClearFlags();
 	AddFlag( FL_CLIENT );
 
-	int effects = GetEffects() & SHADOWS_RENDER_TO_TEXTURE;
+	int effects = GetEffects() & SHADOWS_RENDER_TO_DEPTH_TEXTURE;
 	SetEffects( effects );
 
 	m_iFOV	= 0;	// init field of view.

@@ -24,11 +24,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_Sun, DT_Sun, CSun )
 	RecvPropInt( RECVINFO(m_clrOverlay), 0, RecvProxy_IntToColor32 ),
 	RecvPropVector( RECVINFO( m_vDirection ) ),
 	RecvPropInt( RECVINFO( m_bOn ) ),
-<<<<<<< HEAD
-	//RecvPropInt( RECVINFO( m_nSize ) ),
-=======
 	RecvPropInt( RECVINFO( m_nSize ) ),
->>>>>>> parent of a24a1c1 (try to port sunshafts(C17))
 	RecvPropInt( RECVINFO( m_nOverlaySize ) ),
 	RecvPropInt( RECVINFO( m_nMaterial ) ),
 	RecvPropInt( RECVINFO( m_nOverlayMaterial ) ),

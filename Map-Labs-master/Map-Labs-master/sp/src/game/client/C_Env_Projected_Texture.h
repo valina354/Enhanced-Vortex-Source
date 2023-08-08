@@ -21,17 +21,17 @@
 //-----------------------------------------------------------------------------
 class C_EnvProjectedTexture : public C_BaseEntity
 {
-	DECLARE_CLASS( C_EnvProjectedTexture, C_BaseEntity );
+	DECLARE_CLASS(C_EnvProjectedTexture, C_BaseEntity);
 public:
 	DECLARE_CLIENTCLASS();
 
-	void SetMaterial( IMaterial *pMaterial );
-	void SetLightColor( byte r, byte g, byte b, byte a );
-	void SetSize( float flSize );
-	void SetRotation( float flRotation );
+	void SetMaterial(IMaterial *pMaterial);
+	void SetLightColor(byte r, byte g, byte b, byte a);
+	void SetSize(float flSize);
+	void SetRotation(float flRotation);
 
-	virtual void OnDataChanged( DataUpdateType_t updateType );
-	void	ShutDownLightHandle( void );
+	virtual void OnDataChanged(DataUpdateType_t updateType);
+	void	ShutDownLightHandle(void);
 
 #ifdef MAPBASE
 	virtual void Simulate();
@@ -39,20 +39,20 @@ public:
 	virtual bool Simulate();
 #endif
 
-	void	UpdateLight( void );
+	void	UpdateLight(void);
 
 	C_EnvProjectedTexture();
 	~C_EnvProjectedTexture();
 
-	static void SetVisibleBBoxMinHeight( float flVisibleBBoxMinHeight ) { m_flVisibleBBoxMinHeight = flVisibleBBoxMinHeight; }
-	static float GetVisibleBBoxMinHeight( void ) { return m_flVisibleBBoxMinHeight; }
-	static C_EnvProjectedTexture *Create( );
+	static void SetVisibleBBoxMinHeight(float flVisibleBBoxMinHeight) { m_flVisibleBBoxMinHeight = flVisibleBBoxMinHeight; }
+	static float GetVisibleBBoxMinHeight(void) { return m_flVisibleBBoxMinHeight; }
+	static C_EnvProjectedTexture *Create();
 
 private:
 
-	inline bool IsBBoxVisible( void );
-	bool IsBBoxVisible( Vector vecExtentsMin,
-						Vector vecExtentsMax );
+	inline bool IsBBoxVisible(void);
+	bool IsBBoxVisible(Vector vecExtentsMin,
+		Vector vecExtentsMax);
 
 	IMesh	*m_pVolmetricMesh;
 	CMaterialReference m_matVolumetricsMaterial;
@@ -87,7 +87,7 @@ private:
 	float		m_flAmbient;
 	float		m_flNearZ;
 	float		m_flFarZ;
-	char		m_SpotlightTextureName[ MAX_PATH ];
+	char		m_SpotlightTextureName[MAX_PATH];
 	CTextureReference m_SpotlightTexture;
 	int			m_nSpotlightTextureFrame;
 	int			m_nShadowQuality;
@@ -117,9 +117,9 @@ private:
 
 
 
-bool C_EnvProjectedTexture::IsBBoxVisible( void )
+bool C_EnvProjectedTexture::IsBBoxVisible(void)
 {
-	return IsBBoxVisible( GetAbsOrigin() + m_vecExtentsMin, GetAbsOrigin() + m_vecExtentsMax );
+	return IsBBoxVisible(GetAbsOrigin() + m_vecExtentsMin, GetAbsOrigin() + m_vecExtentsMax);
 }
 
 #else
@@ -129,19 +129,19 @@ bool C_EnvProjectedTexture::IsBBoxVisible( void )
 //-----------------------------------------------------------------------------
 class C_EnvProjectedTexture : public C_BaseEntity
 {
-	DECLARE_CLASS( C_EnvProjectedTexture, C_BaseEntity );
+	DECLARE_CLASS(C_EnvProjectedTexture, C_BaseEntity);
 public:
 	DECLARE_CLIENTCLASS();
 
 	C_EnvProjectedTexture();
 	~C_EnvProjectedTexture();
 
-	virtual void OnDataChanged( DataUpdateType_t updateType );
-	void	ShutDownLightHandle( void );
+	virtual void OnDataChanged(DataUpdateType_t updateType);
+	void	ShutDownLightHandle(void);
 
 	virtual void Simulate();
 
-	void	UpdateLight( bool bForceUpdate );
+	void	UpdateLight(bool bForceUpdate);
 
 	bool	ShadowsEnabled();
 
@@ -161,7 +161,7 @@ private:
 	bool	m_bCameraSpace;
 	color32	m_cLightColor;
 	float	m_flAmbient;
-	char	m_SpotlightTextureName[ MAX_PATH ];
+	char	m_SpotlightTextureName[MAX_PATH];
 	int		m_nSpotlightTextureFrame;
 	int		m_nShadowQuality;
 	bool	m_bCurrentShadow;
