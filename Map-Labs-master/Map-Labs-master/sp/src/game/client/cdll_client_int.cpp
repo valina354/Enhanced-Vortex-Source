@@ -174,6 +174,8 @@ extern vgui::IInputInternal *g_InputInternal;
 #include "sixense/in_sixense.h"
 #endif
 
+#include "df_view_scene.h"
+
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -299,6 +301,7 @@ CGlobalVarsBase *gpGlobals = &dummyvars;
 class CHudChat;
 class CViewRender;
 extern CViewRender g_DefaultViewRender;
+extern CDFViewRender g_ViewRender;
 
 extern void StopAllRumbleEffects( void );
 
@@ -1081,7 +1084,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	if (!view)
 	{
-		view = (IViewRender *)&g_DefaultViewRender;
+		view = (IViewRender *)&g_ViewRender;
 	}
 
 	view->Init();

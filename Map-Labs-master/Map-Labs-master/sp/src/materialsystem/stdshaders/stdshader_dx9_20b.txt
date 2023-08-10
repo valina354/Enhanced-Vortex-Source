@@ -31,3 +31,10 @@ chromatic_vs20.fxc
 chromatic_ps2x.fxc
 
 screenspace_simple_vs20.fxc
+
+fbquad_ps20b.fxc
+fbquad_vsxx.fxc
+skymask_ps20b.fxc
+skymask_vsxx.fxc
+sunrays_calc_ps20b.fxc
+sunrays_calc_vsxx.fxc

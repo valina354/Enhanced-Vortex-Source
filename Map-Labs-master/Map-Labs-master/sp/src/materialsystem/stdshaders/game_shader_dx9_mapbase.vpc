@@ -69,12 +69,15 @@ $Project
 		$File	"vignetting.cpp"
 		$File	"chromatic.cpp"
 		$File	"luma.cpp"
-		$File	"fxxa.cpp"
+		$File	"fxaa.cpp"
 		$File	"unsharp.cpp"
 		$File	"unsharp_blur.cpp"
 		$File	"screenwater.cpp"
+		$File	"ss_sunrays.cpp"
+		$File	"skymask.cpp"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"
 	//$Shaders	"mapbase_dx9_30.txt"
+	$Shaders    "sunrays.txt"
 }
