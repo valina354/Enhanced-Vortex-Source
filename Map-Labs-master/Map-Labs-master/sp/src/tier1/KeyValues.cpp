@@ -2085,6 +2085,9 @@ bool EvaluateConditional( const char *str )
 	if ( Q_stristr( str, "$POSIX" ) )
 		return IsPosix() ^ bNot;
 
+	if (Q_stristr(str, "$DECK"))
+		return bNot;
+
 #ifdef MAPBASE
 	// Custom conditional
 	switch( str[bNot ? 1 : 0] )

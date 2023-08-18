@@ -17,6 +17,18 @@ $Project
 		   $File	"$SRCDIR\game\client\c_npc_icedog.cpp"
 		}
 		
+		$Folder	"downfallandrandomstuff"
+		{
+		   $File	"$SRCDIR\game\client\shaderapihack.h"
+		   $File	"$SRCDIR\game\client\df_render_targets.cpp"
+		   $File	"$SRCDIR\game\client\df_render_targets.h"
+		   $File	"$SRCDIR\game\client\df_screeneffects.cpp"
+		   $File	"$SRCDIR\game\client\df_screeneffects.h"
+		   $File	"$SRCDIR\game\client\df_view_scene.cpp"
+		   $File	"$SRCDIR\game\client\df_view_scene.h"
+		   $File	"materialproxy_lightedmouth.cpp"
+		}
+		
 			$Folder "Shader Editor" [$WIN32]
 		{
 			$Folder	"Header Files"

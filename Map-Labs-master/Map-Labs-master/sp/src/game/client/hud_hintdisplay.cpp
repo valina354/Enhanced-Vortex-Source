@@ -366,6 +366,7 @@ private:
 	CUtlVector<vgui::Label *> m_Labels;
 	vgui::HFont m_hSmallFont, m_hLargeFont;
 	int		m_iBaseY;
+	bool	m_bBitmap;
 
 	CPanelAnimationVarAliasType( float, m_iTextX, "text_xpos", "8", "proportional_float" );
 	CPanelAnimationVarAliasType( float, m_iTextY, "text_ypos", "8", "proportional_float" );
@@ -433,7 +434,7 @@ void CHudHintKeyDisplay::OnThink()
 {
 	for (int i = 0; i < m_Labels.Count(); i++)
 	{
-		if ( IsX360() && ( i & 1 ) == 0 )
+		if (m_bBitmap && (i & 1) == 0)
 		{
 			// Don't change the fg color for buttons (even numbered labels)
 			m_Labels[i]->SetAlpha( GetFgColor().a() );
@@ -463,6 +464,7 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 		m_Labels[i]->MarkForDeletion();
 	}
 	m_Labels.RemoveAll();
+	m_bBitmap = false;
 
 	// look up the text string
 	wchar_t *ws = g_pVGuiLocalize->Find( text );
@@ -664,6 +666,7 @@ bool CHudHintKeyDisplay::SetHintText( const char *text )
 		{
 			// Don't change the color of the button art
 			label->SetFgColor( Color(255,255,255,255) );
+			m_bBitmap = true;
 		}
 		else
 		{

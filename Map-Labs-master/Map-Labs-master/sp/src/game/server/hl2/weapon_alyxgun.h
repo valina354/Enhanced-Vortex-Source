@@ -49,12 +49,15 @@ public:
 
 	void Operator_ForceNPCFire( CBaseCombatCharacter  *pOperator, bool bSecondary );
 	void Operator_HandleAnimEvent( animevent_t *pEvent, CBaseCombatCharacter *pOperator );
+	virtual void	SecondaryAttack(void) { return; }
 
+#if 0
 	virtual void SetPickupTouch( void )
 	{
 		// Alyx gun cannot be picked up
 		SetTouch(NULL);
 	}
+#endif // 0
 
 #ifdef MAPBASE
 	virtual acttable_t		*GetBackupActivityList() { return GetPistolActtable(); }

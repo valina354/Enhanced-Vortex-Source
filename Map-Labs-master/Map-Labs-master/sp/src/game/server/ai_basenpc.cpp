@@ -9879,7 +9879,14 @@ void CAI_BaseNPC::HandleAnimEvent( animevent_t *pEvent )
 			else if ( pEvent->event == AE_NPC_RAGDOLL )
 			{
 				// Convert to ragdoll immediately
-				BecomeRagdollOnClient( vec3_origin );
+				CTakeDamageInfo info(this, this, 0.f, DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE);
+				if (m_hInteractionPartner)
+				{
+					info.SetAttacker(m_hInteractionPartner);
+					info.SetInflictor(m_hInteractionPartner);
+				}
+
+				BecomeRagdoll(info, vec3_origin);
 				return;
 			}
 			else if ( pEvent->event == AE_NPC_ADDGESTURE )
@@ -10372,12 +10379,15 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 
 	if (m_debugOverlays & OVERLAY_TEXT_BIT)
 	{
+		int r = 0;
+		int g = 255;
+		int b = 255;
 		char tempstr[512];
 		// --------------
 		// Print Health
 		// --------------
 		Q_snprintf(tempstr,sizeof(tempstr),"Health: %i  (DACC:%1.2f)",m_iHealth.Get(), GetDamageAccumulator() );
-		EntityText(text_offset,tempstr,0);
+		EntityText(text_offset, tempstr, 0, r, g, b);
 		text_offset++;
 
 		// --------------
@@ -10387,7 +10397,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 		if ( (int)m_NPCState < ARRAYSIZE(pStateNames) )
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"Stat: %s, ", pStateNames[m_NPCState] );
-			EntityText(text_offset,tempstr,0);
+			EntityText(text_offset, tempstr, 0, r, g, b);
 			text_offset++;
 		}
 
@@ -10397,7 +10407,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 		if( IsInAScript() )
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"STARTSCRIPTING" );
-			EntityText(text_offset,tempstr,0);
+			EntityText(text_offset, tempstr, 0, r, g, b);
 			text_offset++;
 		}
 
@@ -10407,7 +10417,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 		if( GetHintGroup() != NULL_STRING )
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"Hint Group: %s", STRING(GetHintGroup()) );
-			EntityText(text_offset,tempstr,0);
+			EntityText(text_offset, tempstr, 0, r, g, b);
 			text_offset++;
 		}
 
@@ -10420,7 +10430,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 		if ( navTypeIndex < ARRAYSIZE(pMoveNames) )
 		{
 			Q_snprintf(tempstr,sizeof(tempstr),"Move: %s, ", pMoveNames[navTypeIndex] );
-			EntityText(text_offset,tempstr,0);
+			EntityText(text_offset, tempstr, 0, r, g, b);
 			text_offset++;
 		}
 
@@ -10433,7 +10443,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 			if ( pBehavior )
 			{
 				Q_snprintf(tempstr,sizeof(tempstr),"Behv: %s, ", pBehavior->GetName() );
-				EntityText(text_offset,tempstr,0);
+				EntityText(text_offset, tempstr, 0, r, g, b);
 				text_offset++;
 			}
 
@@ -10444,7 +10454,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 				pName = "Unknown";
 			}
 			Q_snprintf(tempstr,sizeof(tempstr),"Schd: %s, ", pName );
-			EntityText(text_offset,tempstr,0);
+			EntityText(text_offset, tempstr, 0, r, g, b);
 			text_offset++;
 
 			if (m_debugOverlays & OVERLAY_NPC_TASK_BIT)
@@ -10457,7 +10467,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 						TaskName(GetCurSchedule()->GetTaskList()[i].iTask),
 						((i==GetScheduleCurTaskIndex())	? "<-"   :""));
 
-					EntityText(text_offset,tempstr,0);
+					EntityText(text_offset, tempstr, 0, r, g, b);
 					text_offset++;
 				}
 			}
@@ -10472,7 +10482,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 				{
 					Q_strncpy(tempstr,"Task: None",sizeof(tempstr));
 				}
-				EntityText(text_offset,tempstr,0);
+				EntityText(text_offset, tempstr, 0, r, g, b);
 				text_offset++;
 			}
 		}
@@ -10501,7 +10511,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 		{
 			Q_strncpy(tempstr,"Actv: INVALID", sizeof(tempstr) );
 		}
-		EntityText(text_offset,tempstr,0);
+		EntityText(text_offset, tempstr, 0, r, g, b);
 		text_offset++;
 
 		//
@@ -10523,7 +10533,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 			if (!bHasConditions)
 			{
 				Q_snprintf(tempstr,sizeof(tempstr),"(no conditions)");
-				EntityText(text_offset,tempstr,0);
+				EntityText(text_offset, tempstr, 0, r, g, b);
 				text_offset++;
 			}
 		}
@@ -10547,7 +10557,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 			}
 
 			Q_snprintf(tempstr,sizeof(tempstr),"Intr: %s (%s)\n", pName, m_interruptText );
-			EntityText(text_offset,tempstr,0);
+			EntityText(text_offset, tempstr, 0, r, g, b);
 			text_offset++;
 		}
 
@@ -10563,7 +10573,7 @@ int CAI_BaseNPC::DrawDebugTextOverlays(void)
 				pName = "Unknown";
 			}
 			Q_snprintf(tempstr,sizeof(tempstr),"Fail: %s (%s)\n", pName,m_failText );
-			EntityText(text_offset,tempstr,0);
+			EntityText(text_offset, tempstr, 0, r, g, b);
 			text_offset++;
 		}
 
@@ -13920,6 +13930,16 @@ bool CAI_BaseNPC::OnObstructingDoor( AILocalMoveGoal_t *pMoveGoal,
 	{
 		if ( distClear < 0.1 )
 		{
+#ifdef MAPBASE
+			if ((CapabilitiesGet() & bits_CAP_AUTO_DOORS) && !pDoor->m_bLocked && !pDoor->HasSpawnFlags(SF_DOOR_NONPCS))
+			{
+				// Tell the door to open
+				m_flMoveWaitFinished = OpenDoorAndWait(pDoor);
+				*pResult = AIMR_OK;
+				GetNavigator()->NoteOpeningDoor();
+			}
+			else
+#endif // MAPBASE
 			*pResult = AIMR_BLOCKED_ENTITY;
 		}
 		else

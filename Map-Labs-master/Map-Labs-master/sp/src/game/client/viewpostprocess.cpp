@@ -1639,6 +1639,101 @@ static float GetBloomAmount( void )
 	return flBloomAmount;
 }
 
+
+extern ConVar r_post_anamorphic_bloom;
+ConVar r_post_anamorphic_bloom_strength("r_post_anamorphic_bloom_strength", "1.15", FCVAR_CHEAT);
+
+static void Generate8BitBloomTexture(IMatRenderContext *pRenderContext, float flBloomScale,
+	int x, int y, int w, int h)
+{
+	pRenderContext->PushRenderTargetAndViewport();
+	ITexture *pSrc = materials->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
+	int nSrcWidth = pSrc->GetActualWidth();
+	int nSrcHeight = pSrc->GetActualHeight(); //,dest_height;
+
+	IMaterial *downsample_mat = materials->FindMaterial("dev/downsample_non_hdr", TEXTURE_GROUP_OTHER, true);
+	IMaterial *xblur_mat = materials->FindMaterial("dev/blurfilterx_nohdr", TEXTURE_GROUP_OTHER, true);
+	IMaterial *yblur_mat = materials->FindMaterial("dev/blurfiltery_nohdr", TEXTURE_GROUP_OTHER, true);
+	ITexture *dest_rt0 = materials->FindTexture("_rt_SmallFB0", TEXTURE_GROUP_RENDER_TARGET);
+	ITexture *dest_rt1 = materials->FindTexture("_rt_SmallFB1", TEXTURE_GROUP_RENDER_TARGET);
+
+	//City17: Anamorphic Bloom
+	IMaterial *anamorphic_bloom = materials->FindMaterial("effects/shaders/anamorphic_bloom", TEXTURE_GROUP_PIXEL_SHADERS, true);
+	IMaterial *anamorphic_final = materials->FindMaterial("effects/shaders/anamorphic_bloom_final", TEXTURE_GROUP_CLIENT_EFFECTS, true);
+
+	//City17: VMT Options
+	IMaterialVar *var;
+
+	// *Everything* in here relies on the small RTs being exactly 1/4 the full FB res
+	Assert(dest_rt0->GetActualWidth() == pSrc->GetActualWidth() / 4);
+	Assert(dest_rt0->GetActualHeight() == pSrc->GetActualHeight() / 4);
+	Assert(dest_rt1->GetActualWidth() == pSrc->GetActualWidth() / 4);
+	Assert(dest_rt1->GetActualHeight() == pSrc->GetActualHeight() / 4);
+
+	// downsample fb to rt0
+	SetRenderTargetAndViewPort(dest_rt0);
+	// note the -2's below. Thats because we are downsampling on each axis and the shader
+	// accesses pixels on both sides of the source coord
+	pRenderContext->DrawScreenSpaceRectangle(downsample_mat, 0, 0, nSrcWidth / 4, nSrcHeight / 4,
+		0, 0, nSrcWidth - 2, nSrcHeight - 2,
+		nSrcWidth, nSrcHeight);
+
+	if (IsX360())
+	{
+		pRenderContext->CopyRenderTargetToTextureEx(dest_rt0, 0, NULL, NULL);
+	}
+
+	// guassian blur x rt0 to rt1
+	SetRenderTargetAndViewPort(dest_rt1);
+	pRenderContext->DrawScreenSpaceRectangle(xblur_mat, 0, 0, nSrcWidth / 4, nSrcHeight / 4,
+		0, 0, nSrcWidth / 4 - 1, nSrcHeight / 4 - 1,
+		nSrcWidth / 4, nSrcHeight / 4);
+	if (IsX360())
+	{
+		pRenderContext->CopyRenderTargetToTextureEx(dest_rt1, 0, NULL, NULL);
+	}
+
+	// GR - gaussian blur y rt1 to rt0
+	SetRenderTargetAndViewPort(dest_rt0);
+	var = yblur_mat->FindVar("$bloomamount", NULL);
+	var->SetFloatValue(flBloomScale);
+	pRenderContext->DrawScreenSpaceRectangle(yblur_mat, 0, 0, nSrcWidth / 4, nSrcHeight / 4,
+		0, 0, nSrcWidth / 4 - 1, nSrcHeight / 4 - 1,
+		nSrcWidth / 4, nSrcHeight / 4);
+	if (IsX360())
+	{
+		pRenderContext->CopyRenderTargetToTextureEx(dest_rt0, 0, NULL, NULL);
+	}
+
+	if (r_post_anamorphic_bloom.GetBool())
+	{
+		// anamorphic RT1
+		SetRenderTargetAndViewPort(dest_rt1);
+		var = anamorphic_bloom->FindVar("$MUTABLE_01", NULL);
+		var->SetFloatValue(r_post_anamorphic_bloom_strength.GetFloat());
+		pRenderContext->DrawScreenSpaceRectangle(anamorphic_bloom, 0, 0, nSrcWidth / 4, nSrcHeight / 4,
+			0, 0, nSrcWidth / 4 - 1, nSrcHeight / 4 - 1,
+			nSrcWidth / 4, nSrcHeight / 4);
+		if (IsX360())
+		{
+			pRenderContext->CopyRenderTargetToTextureEx(dest_rt1, 0, NULL, NULL);
+		}
+
+		// anamorphic RT1 to RT0
+		SetRenderTargetAndViewPort(dest_rt0);
+		pRenderContext->DrawScreenSpaceRectangle(anamorphic_final, 0, 0, nSrcWidth / 4, nSrcHeight / 4,
+			0, 0, nSrcWidth / 4 - 1, nSrcHeight / 4 - 1,
+			nSrcWidth / 4, nSrcHeight / 4);
+		if (IsX360())
+		{
+			pRenderContext->CopyRenderTargetToTextureEx(dest_rt0, 0, NULL, NULL);
+		}
+	}
+
+	pRenderContext->PopRenderTargetAndViewport();
+}
+
+
 // Control for dumping render targets to files for debugging
 static ConVar mat_dump_rts( "mat_dump_rts", "0" );
 static int s_nRTIndex = 0;
@@ -1711,84 +1806,6 @@ static void DownsampleFBQuarterSize( IMatRenderContext *pRenderContext, int nSrc
 	pRenderContext->DrawScreenSpaceRectangle(	downsample_mat, 0, 0, nSrcWidth/4, nSrcHeight/4,
 												0, 0, nSrcWidth-2, nSrcHeight-2,
 												nSrcWidth, nSrcHeight );
-}
-
-static void Generate8BitBloomTexture( IMatRenderContext *pRenderContext, float flBloomScale,
-										int x, int y, int w, int h )
-{
-	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
-
-	pRenderContext->PushRenderTargetAndViewport();
-	ITexture *pSrc = materials->FindTexture( "_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET );
-	int nSrcWidth = pSrc->GetActualWidth();
-	int nSrcHeight = pSrc->GetActualHeight(); //,dest_height;
-
-	// Counter-Strike: Source uses a different downsample algorithm than other games
-	#ifdef CSTRIKE_DLL
-		IMaterial *downsample_mat = materials->FindMaterial( "dev/downsample_non_hdr_cstrike", TEXTURE_GROUP_OTHER, true);
-	#else
-		IMaterial *downsample_mat = materials->FindMaterial( "dev/downsample_non_hdr", TEXTURE_GROUP_OTHER, true);
-	#endif
-
-	IMaterial *xblur_mat = materials->FindMaterial( "dev/blurfilterx_nohdr", TEXTURE_GROUP_OTHER, true );
-	IMaterial *yblur_mat = materials->FindMaterial( "dev/blurfiltery_nohdr", TEXTURE_GROUP_OTHER, true );
-	ITexture *dest_rt0 = materials->FindTexture( "_rt_SmallFB0", TEXTURE_GROUP_RENDER_TARGET );
-	ITexture *dest_rt1 = materials->FindTexture( "_rt_SmallFB1", TEXTURE_GROUP_RENDER_TARGET );
-
-	// *Everything* in here relies on the small RTs being exactly 1/4 the full FB res
-	Assert( dest_rt0->GetActualWidth()  == pSrc->GetActualWidth()  / 4 );
-	Assert( dest_rt0->GetActualHeight() == pSrc->GetActualHeight() / 4 );
-	Assert( dest_rt1->GetActualWidth()  == pSrc->GetActualWidth()  / 4 );
-	Assert( dest_rt1->GetActualHeight() == pSrc->GetActualHeight() / 4 );
-
-	// Downsample fb to rt0
-	SetRenderTargetAndViewPort( dest_rt0 );
-	// note the -2's below. Thats because we are downsampling on each axis and the shader
-	// accesses pixels on both sides of the source coord
-	pRenderContext->DrawScreenSpaceRectangle(	downsample_mat, 0, 0, nSrcWidth/4, nSrcHeight/4,
-												0, 0, nSrcWidth-2, nSrcHeight-2,
-												nSrcWidth, nSrcHeight );
-
-	if ( IsX360() )
-	{
-		pRenderContext->CopyRenderTargetToTextureEx( dest_rt0, 0, NULL, NULL );
-	}
-	else if ( g_bDumpRenderTargets )
-	{
-		DumpTGAofRenderTarget( nSrcWidth/4, nSrcHeight/4, "QuarterSizeFB" );
-	}
-
-	// Gaussian blur x rt0 to rt1
-	SetRenderTargetAndViewPort( dest_rt1 );
-	pRenderContext->DrawScreenSpaceRectangle(	xblur_mat, 0, 0, nSrcWidth/4, nSrcHeight/4,
-												0, 0, nSrcWidth/4-1, nSrcHeight/4-1,
-												nSrcWidth/4, nSrcHeight/4 );
-	if ( IsX360() )
-	{
-		pRenderContext->CopyRenderTargetToTextureEx( dest_rt1, 0, NULL, NULL );
-	}
-	else if ( g_bDumpRenderTargets )
-	{
-		DumpTGAofRenderTarget( nSrcWidth/4, nSrcHeight/4, "BlurX" );
-	}
-
-	// Gaussian blur y rt1 to rt0
-	SetRenderTargetAndViewPort( dest_rt0 );
-	IMaterialVar *pBloomAmountVar = yblur_mat->FindVar( "$bloomamount", NULL );
-	pBloomAmountVar->SetFloatValue( 1.0f ); // the bloom amount is now applied in engine_post or bloomadd materials
-	pRenderContext->DrawScreenSpaceRectangle(	yblur_mat, 0, 0, nSrcWidth / 4, nSrcHeight / 4,
-												0, 0, nSrcWidth / 4 - 1, nSrcHeight / 4 - 1,
-												nSrcWidth / 4, nSrcHeight / 4 );
-	if ( IsX360() )
-	{
-		pRenderContext->CopyRenderTargetToTextureEx( dest_rt0, 0, NULL, NULL );
-	}
-	else if ( g_bDumpRenderTargets )
-	{
-		DumpTGAofRenderTarget( nSrcWidth/4, nSrcHeight/4, "BlurYAndBloom" );
-	}
-
-	pRenderContext->PopRenderTargetAndViewport();
 }
 
 static void DoPreBloomTonemapping( IMatRenderContext *pRenderContext, int nX, int nY, int nWidth, int nHeight, float flAutoExposureMin, float flAutoExposureMax )

@@ -56,6 +56,7 @@
 #include "tier1/callqueue.h"
 #ifdef MAPBASE
 #include "viewrender.h"
+#include "materialsystem/imaterialvar.h"
 #endif
 
 #ifdef TF_CLIENT_DLL
@@ -857,6 +858,10 @@ m_iv_flEncodedController("C_BaseAnimating::m_iv_flEncodedController")
 	Q_memset(&m_mouth, 0, sizeof(m_mouth));
 	m_flCycle = 0;
 	m_flOldCycle = 0;
+
+#ifdef MAPBASE
+	m_iszFootStepSet = NULL_STRING;
+#endif // MAPBASE
 }
 
 //-----------------------------------------------------------------------------
@@ -1237,6 +1242,19 @@ CStudioHdr *C_BaseAnimating::OnNewModel()
 	}
 
 	InitModelEffects();
+
+#ifdef MAPBASE
+	KeyValues* pModelKeyValues = new KeyValues("");
+	KeyValues::AutoDelete autodelete_pModelKeyValues(pModelKeyValues);
+	if (pModelKeyValues->LoadFromBuffer(hdr->pszName(), hdr->GetRenderHdr()->KeyValueText()))
+	{
+		const char* pszFootstepSet = pModelKeyValues->GetString("footstep_set", nullptr);
+		if (pszFootstepSet)
+		{
+			m_iszFootStepSet = AllocPooledString(pszFootstepSet);
+		}
+	}
+#endif // MAPBASE
 
 	// lookup generic eye attachment, if exists
 	m_iEyeAttachment = LookupAttachment("eyes");
@@ -4067,6 +4085,13 @@ void C_BaseAnimating::FireEvent(const Vector& origin, const QAngle& angles, int 
 	{
 #ifndef HL2MP
 		char pSoundName[256];
+#ifdef MAPBASE
+		if (m_iszFootStepSet != NULL_STRING)
+		{
+			options = STRING(m_iszFootStepSet);
+		}
+		else
+#endif // MAPBASE
 		if (!options || !options[0])
 		{
 			options = "NPC_CombineS";
@@ -4093,6 +4118,13 @@ void C_BaseAnimating::FireEvent(const Vector& origin, const QAngle& angles, int 
 	{
 #ifndef HL2MP
 		char pSoundName[256];
+#ifdef MAPBASE
+		if (m_iszFootStepSet != NULL_STRING)
+		{
+			options = STRING(m_iszFootStepSet);
+		}
+		else
+#endif // MAPBASE
 		if (!options || !options[0])
 		{
 			options = "NPC_CombineS";
@@ -5121,9 +5153,33 @@ void C_BaseAnimating::OnDataChanged(DataUpdateType_t updateType)
 
 	if ((updateType == DATA_UPDATE_CREATED) || modelchanged)
 	{
+		bool bMouthLight = false;
 		ResetLatched();
+		
+#ifdef MAPBASE
+		if (pModel)
+		{
+			int nMaterials = modelinfo->GetModelMaterialCount(pModel);
+			if (nMaterials > 0)
+			{
+				IMaterial** ppMaterials = (IMaterial**)stackalloc(sizeof(intp) * nMaterials);
+				modelinfo->GetModelMaterials(pModel, nMaterials, ppMaterials);
+
+				for (int i = 0; i < nMaterials; i++)
+				{
+					static unsigned int nMouthLightCache = 0;
+					IMaterialVar* pVar = ppMaterials[i]->FindVarFast("$mouthlight", &nMouthLightCache);
+					if (pVar && pVar->IsDefined() && pVar->GetIntValue() != 0)
+					{
+						bMouthLight = true;
+						break;
+					}
+				}
+			}
+		}
+#endif // MAPBASE
 		// if you have this pose parameter, activate HL1-style lipsync/wave envelope tracking
-		if (LookupPoseParameter(LIPSYNC_POSEPARAM_NAME) != -1)
+		if (bMouthLight || LookupPoseParameter(LIPSYNC_POSEPARAM_NAME) != -1)
 		{
 			MouthInfo().ActivateEnvelope();
 		}

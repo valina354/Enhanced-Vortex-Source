@@ -24,6 +24,13 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+ConVar cl_dissolve_new_effect("cl_dissolve_new_effect", "0", FCVAR_ARCHIVE);
+
+const char* g_pszNewDissolveParticles[ENTITY_DISSOLVE_SPECIAL_COUNT] = {
+	"gluon_zap_sequence",
+};
+
+
 CLIENTEFFECT_REGISTER_BEGIN( PrecacheEffectBuild )
 CLIENTEFFECT_MATERIAL( "effects/tesla_glow_noz" )
 CLIENTEFFECT_MATERIAL( "effects/spark" )
@@ -86,6 +93,22 @@ void C_EntityDissolve::OnDataChanged( DataUpdateType_t updateType )
 	{
 		m_flNextSparkTime = m_flStartTime;
 		SetNextClientThink( CLIENT_THINK_ALWAYS );
+
+		if ((cl_dissolve_new_effect.GetBool() && m_nDissolveType != ENTITY_DISSOLVE_CORE) || m_nDissolveType >= ENTITY_DISSOLVE_FIRST_SPECIAL)
+		{
+			const char* pszEffect = (m_nDissolveType >= ENTITY_DISSOLVE_FIRST_SPECIAL) ? g_pszNewDissolveParticles[m_nDissolveType - ENTITY_DISSOLVE_FIRST_SPECIAL] : "dissolve";
+			m_hEffect = ParticleProp()->Create(pszEffect, PATTACH_ABSORIGIN);
+
+			if (m_hEffect.IsValid())
+			{
+				// Skip the effect ahead if we're restarting it
+				float flTimeDelta = gpGlobals->curtime - m_flStartTime;
+				if (flTimeDelta > 0.01f)
+				{
+					m_hEffect->SkipToTime(flTimeDelta);
+				}
+			}
+		}
 	}
 }
 
@@ -98,6 +121,12 @@ void C_EntityDissolve::UpdateOnRemove( void )
 	{
 		physenv->DestroyMotionController( m_pController );
 		m_pController = NULL;
+	}
+
+	if (m_hEffect.IsValid())
+	{
+		ParticleProp()->StopEmission(m_hEffect.GetObject());
+		m_hEffect = NULL;
 	}
 
 	BaseClass::UpdateOnRemove();
@@ -519,7 +548,7 @@ void C_EntityDissolve::ClientThink( void )
 
 	// NOTE: IsRagdoll means *client-side* ragdoll. We shouldn't be trying to fight
 	// the server ragdoll (or any server physics) on the client
-	if (( !m_pController ) && ( m_nDissolveType == ENTITY_DISSOLVE_NORMAL ) && bIsRagdoll )
+	if ((!m_pController) && (m_nDissolveType == ENTITY_DISSOLVE_NORMAL || m_nDissolveType >= ENTITY_DISSOLVE_FIRST_SPECIAL) && bIsRagdoll)
 	{
 		IPhysicsObject *ppList[VPHYSICS_MAX_OBJECT_LIST_COUNT];
 		int nCount = pEnt->VPhysicsGetObjectList( ppList, ARRAYSIZE(ppList) );
@@ -530,6 +559,22 @@ void C_EntityDissolve::ClientThink( void )
 			{
 				m_pController->AttachObject( ppList[i], true );
 			}
+		}
+	}
+
+
+	if (m_hEffect.IsValid())
+	{
+		ParticleProp()->AddControlPoint(m_hEffect.GetObject(), 0, pEnt, PATTACH_ABSORIGIN_FOLLOW);
+		trace_t tr;
+		UTIL_TraceLine(pEnt->WorldSpaceCenter(), pEnt->WorldSpaceCenter() + Vector(0, 0, -4096), MASK_SOLID, pEnt, COLLISION_GROUP_DEBRIS, &tr);
+
+		m_hEffect->SetControlPoint(1, tr.endpos);
+
+		if (IsServerEntity() && GetRenderColor().a == 0)
+		{
+			ParticleProp()->StopEmission(m_hEffect.GetObject());
+			m_hEffect = NULL;
 		}
 	}
 
@@ -590,7 +635,7 @@ void C_EntityDissolve::ClientThink( void )
 int C_EntityDissolve::DrawModel( int flags )
 {
 	// See if we should draw
-	if ( gpGlobals->frametime == 0 || m_bReadyToDraw == false )
+	if (gpGlobals->frametime == 0 || m_bReadyToDraw == false || m_nDissolveType >= ENTITY_DISSOLVE_FIRST_SPECIAL)
 		return 0;
 
 	C_BaseAnimating *pAnimating = GetMoveParent() ? GetMoveParent()->GetBaseAnimating() : NULL;
@@ -611,6 +656,9 @@ int C_EntityDissolve::DrawModel( int flags )
 
 	// Make sure the emitter is setup properly
 	SetupEmitter();
+
+	// Make sure the emitter is setup properly
+	SetupEmitter();
 	
 	// Get fade percentages for the effect
 	float fadeInPerc = GetFadeInPercentage();
@@ -618,13 +666,20 @@ int C_EntityDissolve::DrawModel( int flags )
 
 	float fadePerc = ( fadeInPerc >= 1.0f ) ? fadeOutPerc : fadeInPerc;
 
-	Vector vecSkew = vec3_origin;
 
 	// Do extra effects under certain circumstances
 	if ( ( fadePerc < 0.99f ) && ( (m_nDissolveType == ENTITY_DISSOLVE_ELECTRICAL) || (m_nDissolveType == ENTITY_DISSOLVE_ELECTRICAL_LIGHT) ) )
 	{
 		DoSparks( set, hitboxbones );
 	}
+
+	if (m_hEffect.IsValid())
+		return 0;
+
+	// Make sure the emitter is setup properly
+	SetupEmitter();
+
+	Vector vecSkew = vec3_origin;
 
 	// Skew the particles in front or in back of their targets
 	vecSkew = CurrentViewForward() * ( 8.0f - ( ( 1.0f - fadePerc ) * 32.0f ) );

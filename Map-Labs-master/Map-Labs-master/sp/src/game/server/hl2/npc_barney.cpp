@@ -49,6 +49,8 @@ public:
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
+	CNPC_Barney();
+
 	virtual void Precache()
 	{
 #ifndef MAPBASE // This is now done in CNPC_PlayerCompanion::Precache()
@@ -88,7 +90,9 @@ public:
 	bool	GetGameTextSpeechParams( hudtextparms_t &params ) { params.r1 = 215; params.g1 = 255; params.b1 = 255; return BaseClass::GetGameTextSpeechParams( params ); }
 #endif
 
+#ifndef MAPBASE
 	CAI_FuncTankBehavior		m_FuncTankBehavior;
+#endif // !MAPBASE
 	COutputEvent				m_OnPlayerUse;
 
 	DEFINE_CUSTOM_AI;
@@ -109,10 +113,17 @@ END_SEND_TABLE()
 //---------------------------------------------------------
 BEGIN_DATADESC( CNPC_Barney )
 //						m_FuncTankBehavior
-	DEFINE_OUTPUT( m_OnPlayerUse, "OnPlayerUse" ),
-	DEFINE_USEFUNC( UseFunc ),
-END_DATADESC()
+DEFINE_OUTPUT(m_OnPlayerUse, "OnPlayerUse"),
+DEFINE_USEFUNC(UseFunc),
+END_DATADESC();
 
+CNPC_Barney::CNPC_Barney()
+{
+#ifdef MAPBASE
+	m_iNumGrenades = 99;
+	m_iGrenadeCapabilities = GRENCAP_ALTFIRE;
+#endif // MAPBASE
+}
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -209,7 +220,9 @@ void CNPC_Barney::DeathSound( const CTakeDamageInfo &info )
 bool CNPC_Barney::CreateBehaviors( void )
 {
 	BaseClass::CreateBehaviors();
-	AddBehavior( &m_FuncTankBehavior );
+#ifndef MAPBASE
+	AddBehavior(&m_FuncTankBehavior);
+#endif // !MAPBASE
 
 	return true;
 }

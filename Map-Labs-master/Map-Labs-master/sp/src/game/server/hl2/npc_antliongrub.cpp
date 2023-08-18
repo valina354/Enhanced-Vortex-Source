@@ -813,6 +813,17 @@ void CAntlionGrub::Squash( CBaseEntity *pOther, bool bDealDamage, bool bSpawnBlo
 		CTakeDamageInfo info( pOther, pOther, Vector( 0, 0, -1 ), GetAbsOrigin(), GetHealth()+1, DMG_CRUSH );
 		TakeDamage( info );
 	}
+
+	int iGlobal = GlobalEntity_GetIndex("antliongrubs_squashed");
+	if (iGlobal < 0)
+	{
+		iGlobal = GlobalEntity_Add("antliongrubs_squashed", STRING(gpGlobals->mapname), GLOBAL_ON);
+	}
+
+	if (GlobalEntity_GetStateByIndex(iGlobal) == GLOBAL_ON)
+	{
+		GlobalEntity_AddToCounter("antliongrubs_squashed", 1);
+	}
 }
 
 //-----------------------------------------------------------------------------

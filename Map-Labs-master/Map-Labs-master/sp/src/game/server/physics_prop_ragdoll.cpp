@@ -1407,6 +1407,13 @@ CBaseEntity *CreateServerRagdoll( CBaseAnimating *pAnimating, int forceBone, con
 	pRagdoll->CopyAnimationDataFrom( pAnimating );
 	pRagdoll->SetOwnerEntity( pAnimating );
 
+#ifdef MAPBASE
+	if (info.GetDamageType() & DMG_PARALYZE)
+	{
+		pRagdoll->AddSpawnFlags(SF_RAGDOLLPROP_FIXED_CONSTRAINTS);
+	}
+#endif // MAPBASE
+
 #ifdef MAPBASE_VSCRIPT
 	// Hook for pre-spawn ragdolling
 	if (pAnimating->m_ScriptScope.IsInitialized() && CBaseAnimating::g_Hook_OnServerRagdoll.CanRunInScope( pAnimating->m_ScriptScope ))

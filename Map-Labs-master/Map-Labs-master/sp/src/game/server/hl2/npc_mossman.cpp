@@ -95,11 +95,27 @@ int CNPC_Mossman::GetSoundInterests ( void )
 //-----------------------------------------------------------------------------
 void CNPC_Mossman::Spawn()
 {
+#ifdef MAPBASE
+	char* szModel = (char*)STRING(GetModelName());
+	if (!szModel || !*szModel)
+	{
+#ifdef HL2_EPISODIC
+		szModel = hl2_episodic.GetBool() ? "models/mossman.mdl" : "models/mossman_hl2.mdl";
+#else
+		szModel = "models/mossman.mdl";
+#endif // HL2_EPISODIC
+		SetModelName(AllocPooledString(szModel));
+	}
+#endif // MAPBASE
 	Precache();
 
 	BaseClass::Spawn();
 
-	SetModel( "models/mossman.mdl" );
+#ifndef MAPBASE
+	SetModel("models/mossman.mdl");
+#else
+	SetModel(szModel);
+#endif // !MAPBASE
 
 	SetHullType(HULL_HUMAN);
 	SetHullSizeNormal();
@@ -124,7 +140,11 @@ void CNPC_Mossman::Spawn()
 //-----------------------------------------------------------------------------
 void CNPC_Mossman::Precache()
 {
-	PrecacheModel( "models/mossman.mdl" );
+#ifndef MAPBASE
+	PrecacheModel("models/mossman.mdl");
+#else
+	PrecacheModel(STRING(GetModelName()));
+#endif // !MAPBASE
 	
 	BaseClass::Precache();
 }	

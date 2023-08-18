@@ -135,6 +135,29 @@ void CModelSoundsCache::BuildAnimationEventSoundList( CStudioHdr *hdr, CUtlVecto
 	// force animation event resolution!!!
 	VerifySequenceIndex( hdr );
 
+#ifdef MAPBASE
+	KeyValues* pModelKeyValues = new KeyValues("");
+	KeyValues::AutoDelete autodelete_pModelKeyValues(pModelKeyValues);
+	if (pModelKeyValues->LoadFromBuffer(hdr->pszName(), hdr->GetRenderHdr()->KeyValueText()))
+	{
+		const char* pszFootstepSet = pModelKeyValues->GetString("footstep_set", nullptr);
+		if (pszFootstepSet)
+		{
+			char soundname[256];
+
+			Q_snprintf(soundname, 256, "%s.RunFootstepLeft", pszFootstepSet);
+			FindOrAddScriptSound(sounds, soundname);
+			Q_snprintf(soundname, 256, "%s.RunFootstepRight", pszFootstepSet);
+			FindOrAddScriptSound(sounds, soundname);
+			Q_snprintf(soundname, 256, "%s.FootstepLeft", pszFootstepSet);
+			FindOrAddScriptSound(sounds, soundname);
+			Q_snprintf(soundname, 256, "%s.FootstepRight", pszFootstepSet);
+			FindOrAddScriptSound(sounds, soundname);
+		}
+	}
+#endif // MAPBASE
+
+
 	// Find all animation events which fire off sound script entries...
 	for ( int iSeq=0; iSeq < hdr->GetNumSeq(); iSeq++ )
 	{

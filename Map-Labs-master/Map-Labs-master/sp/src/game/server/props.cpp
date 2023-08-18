@@ -6412,7 +6412,6 @@ public:
 			SetInteraction(PROPINTER_PHYSGUN_CREATE_FLARE);
 		}
 
-		SetClassname( "prop_physics" );
 
 		return BaseClass::Spawn();
 	}

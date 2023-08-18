@@ -76,6 +76,8 @@ private:
 
 	bool	m_bLinkedToServerEnt;
 	IPhysicsMotionController	*m_pController;
+
+	CSmartPtr<CNewParticleEffect>	m_hEffect;
 };
 
 #endif // C_ENTITY_DISSOLVE_H

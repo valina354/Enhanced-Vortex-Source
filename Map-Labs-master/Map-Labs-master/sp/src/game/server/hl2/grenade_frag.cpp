@@ -13,6 +13,7 @@
 #include "soundent.h"
 #ifdef MAPBASE
 #include "mapbase/ai_grenade.h"
+#define REBEL_GRENADES
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -75,6 +76,10 @@ protected:
 	bool	m_inSolid;
 	bool	m_combineSpawned;
 	bool	m_punted;
+
+#ifdef REBEL_GRENADES
+	bool	m_bRebelColor;
+#endif
 };
 
 LINK_ENTITY_TO_CLASS( npc_grenade_frag, CGrenadeFrag );
@@ -88,6 +93,10 @@ BEGIN_DATADESC( CGrenadeFrag )
 	DEFINE_FIELD( m_inSolid, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_combineSpawned, FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_punted, FIELD_BOOLEAN ),
+
+#ifdef REBEL_GRENADES
+	DEFINE_KEYFIELD(m_bRebelColor, FIELD_BOOLEAN, "RebelColor"),
+#endif
 	
 	// Function Pointers
 	DEFINE_THINKFUNC( DelayThink ),
@@ -107,6 +116,11 @@ CGrenadeFrag::~CGrenadeFrag( void )
 
 void CGrenadeFrag::Spawn( void )
 {
+	#ifdef REBEL_GRENADES
+	// Blixibon - Rebel grenades use an orange trail
+	if (GetThrower() && (GetThrower()->Classify() == CLASS_PLAYER_ALLY || GetThrower()->Classify() == CLASS_PLAYER_ALLY_VITAL))
+		m_bRebelColor = true;
+#endif
 	Precache( );
 
 	SetModel( GRENADE_MODEL );
@@ -181,6 +195,11 @@ void CGrenadeFrag::OnRestore( void )
 void CGrenadeFrag::CreateEffects( void )
 {
 	// Start up the eye glow
+#ifdef REBEL_GRENADES
+	if (m_bRebelColor)
+		m_pMainGlow = CSprite::SpriteCreate("sprites/physcannon_blueglow.vmt", GetLocalOrigin(), false);
+	else
+#endif
 	m_pMainGlow = CSprite::SpriteCreate( "sprites/redglow1.vmt", GetLocalOrigin(), false );
 
 	int	nAttachment = LookupAttachment( "fuse" );
@@ -189,6 +208,11 @@ void CGrenadeFrag::CreateEffects( void )
 	{
 		m_pMainGlow->FollowEntity( this );
 		m_pMainGlow->SetAttachment( this, nAttachment );
+#ifdef REBEL_GRENADES
+		if (m_bRebelColor)
+			m_pMainGlow->SetTransparency(kRenderGlow, 255, 192, 0, 200, kRenderFxNoDissipation);
+		else
+#endif
 		m_pMainGlow->SetTransparency( kRenderGlow, 255, 255, 255, 200, kRenderFxNoDissipation );
 		m_pMainGlow->SetScale( 0.2f );
 		m_pMainGlow->SetGlowProxySize( 4.0f );
@@ -201,6 +225,11 @@ void CGrenadeFrag::CreateEffects( void )
 	{
 		m_pGlowTrail->FollowEntity( this );
 		m_pGlowTrail->SetAttachment( this, nAttachment );
+#ifdef REBEL_GRENADES
+		if (m_bRebelColor)
+			m_pGlowTrail->SetTransparency(kRenderTransAdd, 255, 128, 0, 255, kRenderFxNone);
+		else
+#endif
 		m_pGlowTrail->SetTransparency( kRenderTransAdd, 255, 0, 0, 255, kRenderFxNone );
 		m_pGlowTrail->SetStartWidth( 8.0f );
 		m_pGlowTrail->SetEndWidth( 1.0f );
@@ -307,6 +336,10 @@ void CGrenadeFrag::Precache( void )
 
 	PrecacheModel( "sprites/redglow1.vmt" );
 	PrecacheModel( "sprites/bluelaser1.vmt" );
+#ifdef REBEL_GRENADES
+	if (m_bRebelColor)
+		PrecacheModel("sprites/physcannon_blueglow.vmt");
+#endif
 
 	BaseClass::Precache();
 }

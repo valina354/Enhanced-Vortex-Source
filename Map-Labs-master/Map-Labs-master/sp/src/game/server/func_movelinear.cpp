@@ -455,7 +455,7 @@ int CFuncMoveLinear::DrawDebugTextOverlays(void)
 		}
 		else
 		{
-#else
+#endif
 		char tempstr[512];
 		float flTravelDist = (m_vecPosition1 - m_vecPosition2).Length();
 		float flCurDist	   = (m_vecPosition1 - GetLocalOrigin()).Length();
@@ -467,7 +467,6 @@ int CFuncMoveLinear::DrawDebugTextOverlays(void)
 		Q_snprintf(tempstr,sizeof(tempstr),"Target Pos: %3.3f",flTargetDist/flTravelDist);
 		EntityText(text_offset,tempstr,0);
 		text_offset++;
-#endif
 #ifdef MAPBASE
 		}
 #endif

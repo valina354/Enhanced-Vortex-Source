@@ -494,6 +494,11 @@ protected:
 	// --------------------------------
 	
 	virtual AIMoveResult_t MoveEnact( const AILocalMoveGoal_t &baseMove );
+
+#ifdef MAPBASE
+public:
+	void NoteOpeningDoor() { OnNewGoal(); }
+#endif // MAPBASE
 		
 protected:
 	// made this virtual so strider can implement hover behavior with a navigator

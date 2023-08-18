@@ -2,9 +2,4 @@
 ..\..\..\game\hl2\shaders\fxc\fxaa_vs30.vcs
 ..\..\..\game\hl2\shaders\fxc\luma_ps30.vcs
 ..\..\..\game\hl2\shaders\fxc\screenspace_simple_vs30.vcs
-..\..\..\game\hl2\shaders\fxc\ssao_vs30.vcs
-..\..\..\game\hl2\shaders\fxc\ssao_blur_ps30.vcs
-..\..\..\game\hl2\shaders\fxc\ssao_combine_ps30.vcs
-..\..\..\game\hl2\shaders\fxc\ssao_final_ps30.vcs
-..\..\..\game\hl2\shaders\fxc\ssao_ps30.vcs
-..\..\..\game\hl2\shaders\fxc\ssao_unsharp_ps30.vcs
+..\..\..\game\hl2\shaders\fxc\bloomflare_ps30.vcs

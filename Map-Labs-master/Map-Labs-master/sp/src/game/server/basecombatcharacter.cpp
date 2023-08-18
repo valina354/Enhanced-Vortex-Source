@@ -1727,6 +1727,18 @@ bool CBaseCombatCharacter::BecomeRagdoll( const CTakeDamageInfo &info, const Vec
 	}
 #endif //HL2_DLL
 
+#ifdef MAPBASE
+	if ((info.GetDamageType() & DMG_PARALYZE) && !g_pGameRules->IsMultiplayer() && CanBecomeServerRagdoll())
+	{
+		CBaseEntity* pRagdoll = CreateServerRagdoll(this, m_nForceBone, newinfo, COLLISION_GROUP_INTERACTIVE_DEBRIS, true);
+		FixupBurningServerRagdoll(pRagdoll);
+		PhysSetEntityGameFlags(pRagdoll, FVPHYSICS_NO_SELF_COLLISIONS);
+		RemoveDeferred();
+
+		return true;
+	}
+#endif // MAPBASE
+
 	return BecomeRagdollOnClient( forceVector );
 }
 

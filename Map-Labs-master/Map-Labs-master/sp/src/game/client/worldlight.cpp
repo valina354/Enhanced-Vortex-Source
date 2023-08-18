@@ -381,7 +381,7 @@ void CWorldLights::FindBrightestLightSourceOld( const Vector &vecPosition, Vecto
 
 		// Calculate intensity at our position
 		float flRatio = Engine_WorldLightDistanceFalloff(light, vecDelta);
-		Vector vecIntensity = light->intensity * flRatio;
+		Vector vecIntensity = light->intensity * flRatio * engine->LightStyleValue(light->style);
 
 		// Is this light more intense than the one we already found?
 		if(vecIntensity.LengthSqr() <= vecLightBrightness.LengthSqr())
@@ -464,7 +464,7 @@ void CWorldLights::FindBrightestLightSourceNew( const Vector &vecPosition, Vecto
 
 			// Calculate intensity at our position
 			float flRatio = Engine_WorldLightDistanceFalloff(light, vecDelta);
-			Vector vecIntensity = light->intensity * flRatio;
+			Vector vecIntensity = light->intensity * flRatio * engine->LightStyleValue(light->style);
 
 			// Is this light more intense than the one we already found?
 			if(vecIntensity.LengthSqr() <= vecLightBrightness.LengthSqr())

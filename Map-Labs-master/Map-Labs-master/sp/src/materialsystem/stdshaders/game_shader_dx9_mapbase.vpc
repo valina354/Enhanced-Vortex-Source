@@ -75,6 +75,14 @@ $Project
 		$File	"screenwater.cpp"
 		$File	"ss_sunrays.cpp"
 		$File	"skymask.cpp"
+		$File   "negative.cpp"
+		$File   "bleach_bypass.cpp"
+		$File   "color_clipping.cpp"
+		$File   "sepia.cpp"
+		$File   "complements.cpp"
+		$File   "cubic_distortion.cpp"
+		$File   "Desaturate.cpp"
+		$File   "nightvision.cpp"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"

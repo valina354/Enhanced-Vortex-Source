@@ -197,6 +197,8 @@ void ps30_shader_callback(IConVar *pConVar, char const *pOldString, float flOldV
 	}
 }
 
+ConVar r_post_anamorphic_bloom("r_post_anamorphic_bloom", "0", FCVAR_ARCHIVE, 0, ps30_shader_callback);
+
 void ps20b_shader_callback(IConVar *pConVar, char const *pOldString, float flOldValue)
 {
 	ConVarRef var(pConVar);
@@ -207,7 +209,7 @@ void ps20b_shader_callback(IConVar *pConVar, char const *pOldString, float flOld
 		Warning("Your GPU does not support Shader Model 2.0b! Changes undone!\n");
 	}
 }
-ConVar r_post_complements("r_post_complements", "0", FCVAR_CHEAT, 0, ps20b_shader_callback);
+ConVar r_post_complements("r_post_complements", "1", FCVAR_CHEAT, 0, ps20b_shader_callback);
 #endif
 
 extern ConVar localplayer_visionflags;
@@ -480,7 +482,7 @@ class CShadowDepthView : public CRendering3dView
 public:
 	CShadowDepthView(CViewRender *pMainView) : CRendering3dView( pMainView ) {}
 
-	void Setup( const CViewSetup &shadowViewIn, ITexture *pRenderTarget, ITexture *pDepthTexture );
+	void Setup(const CViewSetup &shadowViewIn, ITexture *pRenderTarget, ITexture *pDepthTexture);
 	void Draw();
 
 private:

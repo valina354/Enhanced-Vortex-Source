@@ -108,7 +108,7 @@ public:
 
 	virtual void SetShadowsDisabled( bool bDisabled ) = 0;
 
-	virtual void ComputeShadowDepthTextures( const CViewSetup &pView ) = 0;
+	virtual void ComputeShadowDepthTextures(const CViewSetup &pView) = 0;
 
 };
 

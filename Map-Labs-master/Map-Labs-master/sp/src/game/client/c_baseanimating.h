@@ -646,6 +646,11 @@ protected:
 	float							m_flOldCycle;
 	bool							m_bNoModelParticles;
 
+#ifdef MAPBASE
+	string_t						m_iszFootStepSet;
+#endif // MAPBASE
+
+
 private:
 	float							m_flOldModelScale;
 	int								m_nOldSequence;

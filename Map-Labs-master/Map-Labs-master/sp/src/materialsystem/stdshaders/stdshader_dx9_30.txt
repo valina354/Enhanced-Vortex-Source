@@ -12,9 +12,4 @@ fxaa_ps30.fxc
 fxaa_vs30.fxc
 luma_ps30.fxc
 screenspace_simple_vs30.fxc
-ssao_vs30.fxc
-ssao_blur_ps30.fxc
-ssao_combine_ps30.fxc
-ssao_final_ps2x.fxc
-ssao_ps30.fxc
-ssao_unsharp_ps2x.fxc
+bloomflare_ps30.fxc
