@@ -56,6 +56,13 @@ ConVar r_visualizeproplightcaching( "r_visualizeproplightcaching", "0" );
 //-----------------------------------------------------------------------------
 bool C_PhysicsProp::OnInternalDrawModel( ClientModelRenderInfo_t *pInfo )
 {
+#ifdef MAPBASE
+	if (!BaseClass::OnInternalDrawModel(pInfo))
+		return false;
+
+	if (pInfo->flags & STUDIO_UPDATE_SHADOW_DIR)
+		return true;
+#endif // MAPBASE
 	CreateModelInstance();
 
 	if ( r_PhysPropStaticLighting.GetBool() && m_bAwakeLastTime != m_bAwake )

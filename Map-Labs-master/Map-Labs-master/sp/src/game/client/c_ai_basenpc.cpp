@@ -47,6 +47,9 @@ bool NPC_IsImportantNPC( C_BaseAnimating *pAnimating )
 
 C_AI_BaseNPC::C_AI_BaseNPC()
 {
+#ifdef MAPBASE
+	AddFlag(FL_NPC);
+#endif // MAPBASE
 }
 
 //-----------------------------------------------------------------------------

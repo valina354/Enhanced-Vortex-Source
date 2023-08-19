@@ -70,7 +70,7 @@ ConVar mapbase_version_client( "mapbase_version_client", MAPBASE_VERSION, FCVAR_
 // This is from the vgui_controls library
 extern vgui::HScheme g_iCustomClientSchemeOverride;
 
-bool g_bUsingCustomHudAnimations = false;
+extern bool g_bUsingCustomHudAnimations;
 bool g_bUsingCustomHudLayout = false;
 #endif
 
@@ -116,6 +116,16 @@ enum
 
 	// Must always be kept below
 	MANIFEST_NUM_TYPES,
+	MANIFEST_LAST_PRELOAD_TYPE = MANIFEST_SURFACEPROPS
+};
+
+enum MapState
+{
+	LEVEL_UNLOADED = 0,
+	LEVEL_PRE_ENTITY,
+	LEVEL_MAPSPAWN,
+	LEVEL_POST_ENTITY,
+	LEVEL_RUNNING
 };
 
 struct ManifestType_t
@@ -163,7 +173,7 @@ class CMapbaseSystem : public CAutoGameSystem
 public:
 	DECLARE_DATADESC();
 
-	CMapbaseSystem() : CAutoGameSystem( "CMapbaseSystem" )
+	CMapbaseSystem() : CAutoGameSystem("CMapbaseSystem"), m_LoadingState(LEVEL_UNLOADED)
 	{
 	}
 
@@ -194,7 +204,8 @@ public:
 #ifdef CLIENT_DLL
 		InitializeRTs();
 #endif
-
+		// Shared Mapbase scripts to avoid overwriting mod files
+		g_pVGuiLocalize->AddFile("resource/mapbase_%language%.txt");
 		return true;
 	}
 
@@ -212,6 +223,7 @@ public:
 
 	virtual void LevelInitPreEntity()
 	{
+		m_LoadingState = LEVEL_PRE_ENTITY;
 #ifdef GAME_DLL
 		CGMsg( 0, CON_GROUP_MAPBASE_MISC, "Mapbase system loaded\n" );
 #endif
@@ -246,11 +258,22 @@ public:
 
 		RefreshMapName();
 
-		// Shared Mapbase scripts to avoid overwriting mod files
-		g_pVGuiLocalize->AddFile( "resource/mapbase_%language%.txt" );
+
 #ifdef CLIENT_DLL
 		PanelMetaClassMgr()->LoadMetaClassDefinitionFile( "scripts/vgui_screens_mapbase.txt" );
 #endif
+		// Check for a generic "mapname_manifest.txt" file and load it.
+		if (filesystem->FileExists(AUTOLOADED_MANIFEST_FILE, "GAME"))
+		{
+			AddManifestFile(AUTOLOADED_MANIFEST_FILE);
+		}
+		else
+		{
+			// Load the generic script instead.
+			ParseGenericManifest();
+		}
+
+		m_LoadingState = LEVEL_MAPSPAWN;
 	}
 
 	virtual void OnRestore()
@@ -260,6 +283,7 @@ public:
 
 	virtual void LevelInitPostEntity()
 	{
+		m_LoadingState = LEVEL_POST_ENTITY;
 		// Check for a generic "mapname_manifest.txt" file and load it.
 		if (filesystem->FileExists( AUTOLOADED_MANIFEST_FILE, "GAME" ))
 		{
@@ -274,6 +298,8 @@ public:
 #ifdef GAME_DLL
 		MapbaseGameLog_Init();
 #endif
+
+		m_LoadingState = LEVEL_RUNNING;
 	}
 
 	virtual void LevelShutdownPreEntity()
@@ -329,6 +355,8 @@ public:
 			}
 		}
 #endif
+
+		m_LoadingState = LEVEL_UNLOADED;
 	}
 
 	bool RefreshMapName()
@@ -437,7 +465,16 @@ public:
 
 	void LoadFromValue( const char *value, int type, bool bDontWarn )
 	{
-		if (type != MANIFEST_VSCRIPT && !filesystem->FileExists(value, "MOD"))
+		if (type > MANIFEST_LAST_PRELOAD_TYPE && m_LoadingState == LEVEL_PRE_ENTITY)
+		{
+			return;
+		}
+		else if (type <= MANIFEST_LAST_PRELOAD_TYPE && m_LoadingState == LEVEL_POST_ENTITY)
+		{
+			return;
+		}
+
+		if (type != MANIFEST_VSCRIPT && !filesystem->FileExists(value, "GAME"))
 		{
 			if (!bDontWarn)
 			{
@@ -450,7 +487,7 @@ public:
 		{
 			case MANIFEST_SOUNDSCRIPTS: { soundemitterbase->AddSoundOverrides(value); } break;
 			//case MANIFEST_PROPDATA: { g_PropDataSystem.ParsePropDataFile(value); } break;
-			case MANIFEST_LOCALIZATION: { g_pVGuiLocalize->AddFile( value, "MOD", true ); } break;
+			case MANIFEST_LOCALIZATION: { g_pVGuiLocalize->AddFile(value, "GAME", true); } break;
 			case MANIFEST_SURFACEPROPS: { AddSurfacepropFile( value, physprops, filesystem ); } break;
 #ifdef CLIENT_DLL
 			case MANIFEST_CLOSECAPTION: { ManifestLoadCustomCloseCaption( value ); } break;
@@ -625,6 +662,7 @@ public:
 #endif
 
 private:
+	byte m_LoadingState;
 
 #ifdef CLIENT_DLL
 	bool m_bInitializedRTs = false;

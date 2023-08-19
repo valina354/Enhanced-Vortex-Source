@@ -13,3 +13,8 @@ fxaa_vs30.fxc
 luma_ps30.fxc
 screenspace_simple_vs30.fxc
 bloomflare_ps30.fxc
+ssao_combine_vs30.fxc
+ssao_vs30.fxc
+ssao_blur_ps30.fxc
+ssao_combine_ps30.fxc
+ssao_ps30.fxc

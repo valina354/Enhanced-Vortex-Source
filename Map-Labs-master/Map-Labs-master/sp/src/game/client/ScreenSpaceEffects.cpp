@@ -918,13 +918,13 @@ ConVar r_post_cross_processing_intensity("r_post_cross_processing_intensity", "0
 ConVar r_post_complements_guidehue_r("r_post_complements_guidehue_r", "1", FCVAR_CHEAT);
 ConVar r_post_complements_guidehue_g("r_post_complements_guidehue_g", "1", FCVAR_CHEAT);
 ConVar r_post_complements_guidehue_b("r_post_complements_guidehue_b", "1", FCVAR_CHEAT);
-ConVar r_post_complements_amount("r_post_complements_amount", "1.0", FCVAR_CHEAT);
+ConVar r_post_complements_amount("r_post_complements_amount", "0.05", FCVAR_CHEAT);
 ConVar r_post_complements_concentrate("r_post_complements_concentrate", "1.0", FCVAR_CHEAT);
 ConVar r_post_complements_desatcorr("r_post_complements_desatcorr", "1.0", FCVAR_CHEAT);
 
-ConVar r_post_cubic_distortion("r_post_cubic_distortion", "0", FCVAR_CHEAT);
+ConVar r_post_cubic_distortion("r_post_cubic_distortion", "1", FCVAR_CHEAT);
 ConVar r_post_cubic_distortion_amount("r_post_cubic_distortion_amount", "-0.15", FCVAR_CHEAT);
-ConVar r_post_cubic_distortion_cubicamount("r_post_cubic_distortion_cubicamount", "0.5", FCVAR_CHEAT);
+ConVar r_post_cubic_distortion_cubicamount("r_post_cubic_distortion_cubicamount", "0.001", FCVAR_CHEAT);
 
 ConVar r_post_desaturate("r_post_desaturate", "1", FCVAR_CHEAT);
 ConVar r_post_desaturate_strength("r_post_desaturate_strength", "0.05", FCVAR_CHEAT);
@@ -1060,5 +1060,113 @@ void CColorCorrectionEffect::Render(int x, int y, int w, int h)
 	}
 }
 
+class CSSAOEffect : public IScreenSpaceEffect
+{
+public:
+	CSSAOEffect(void) { };
 
+	virtual void Init(void);
+	virtual void Shutdown(void);
+	virtual void SetParameters(KeyValues *params) {};
+	virtual void Enable(bool bEnable) { m_bEnabled = bEnable; }
+	virtual bool IsEnabled() { return m_bEnabled; }
+
+	virtual void Render(int x, int y, int w, int h);
+
+private:
+	bool				m_bEnabled;
+
+	CTextureReference	m_SSAOFB0;
+	CTextureReference	m_SSAOFB1;
+	CTextureReference	m_SSAOFB2;
+
+	CMaterialReference	m_ShowZ;
+	CMaterialReference	m_SSAO;
+	CMaterialReference	m_SSAOBlur;
+	CMaterialReference	m_SSAOCombine;
+};
+
+// SSAO
+ADD_SCREENSPACE_EFFECT(CSSAOEffect, c17_ssao);
+
+void CSSAOEffect::Init(void)
+{
+	m_SSAOFB0.InitRenderTarget(ScreenWidth() / 2, ScreenHeight() / 2, RT_SIZE_DEFAULT, IMAGE_FORMAT_RGBA8888, MATERIAL_RT_DEPTH_NONE, false, "_rt_SSAOFB0");
+	m_SSAOFB1.InitRenderTarget(ScreenWidth() / 2, ScreenHeight() / 2, RT_SIZE_DEFAULT, IMAGE_FORMAT_RGBA8888, MATERIAL_RT_DEPTH_NONE, false, "_rt_SSAOFB1");
+	m_SSAOFB2.InitRenderTarget(ScreenWidth() / 2, ScreenHeight() / 2, RT_SIZE_DEFAULT, IMAGE_FORMAT_RGBA8888, MATERIAL_RT_DEPTH_NONE, false, "_rt_SSAOFB2");
+
+	PrecacheMaterial("debug/showz");
+
+	m_ShowZ.Init(materials->FindMaterial("debug/showz", TEXTURE_GROUP_PIXEL_SHADERS, true));
+	m_SSAOBlur.Init(materials->FindMaterial("effects/shaders/ssao_blur", TEXTURE_GROUP_PIXEL_SHADERS, true));
+	m_SSAO.Init(materials->FindMaterial("effects/shaders/ssao_unsharp", TEXTURE_GROUP_PIXEL_SHADERS, true));
+	m_SSAOCombine.Init(materials->FindMaterial("effects/shaders/ssao_final", TEXTURE_GROUP_PIXEL_SHADERS, true));
+}
+
+void CSSAOEffect::Shutdown(void)
+{
+	m_SSAOFB0.Shutdown();
+	m_SSAOFB1.Shutdown();
+	m_SSAOFB2.Shutdown();
+
+	m_ShowZ.Shutdown();
+	m_SSAOBlur.Shutdown();
+	m_SSAO.Shutdown();
+	m_SSAOCombine.Shutdown();
+}
+
+ConVar r_post_ssao("r_post_ssao", "1", FCVAR_ARCHIVE);
+ConVar r_post_ssao_debug("r_post_ssao_debug", "0", FCVAR_CHEAT);
+ConVar r_post_ssao_blursize("r_post_ssao_blursize", "0.5", FCVAR_CHEAT);
+ConVar r_post_ssao_darkening("r_post_ssao_darkening", "0.091", FCVAR_CHEAT, 0, true, 0.0, true, 12.0);
+ConVar r_post_ssao_darkening_edge("r_post_ssao_darkening_edge", "0.1", FCVAR_CHEAT, 0, true, -4.0, true, 28.0);
+void CSSAOEffect::Render(int x, int y, int w, int h)
+{
+	VPROF("CSSAOEffect::Render");
+
+	if (!r_post_ssao.GetBool() || (IsEnabled() == false))
+		return;
+
+	// Grab the render context
+	CMatRenderContextPtr pRenderContext(materials);
+
+	// Set to the proper rendering mode.
+	pRenderContext->MatrixMode(MATERIAL_VIEW);
+	pRenderContext->PushMatrix();
+	pRenderContext->LoadIdentity();
+	pRenderContext->MatrixMode(MATERIAL_PROJECTION);
+	pRenderContext->PushMatrix();
+	pRenderContext->LoadIdentity();
+
+	pRenderContext->PushRenderTargetAndViewport(m_SSAOFB0);
+	pRenderContext->DrawScreenSpaceQuad(m_ShowZ);
+	pRenderContext->PopRenderTargetAndViewport();
+
+	IMaterialVar *var;
+	var = m_SSAOBlur->FindVar("$blursize", NULL);
+	var->SetFloatValue(r_post_ssao_blursize.GetFloat());
+
+	pRenderContext->PushRenderTargetAndViewport(m_SSAOFB1);
+	pRenderContext->DrawScreenSpaceQuad(m_SSAOBlur);
+	pRenderContext->PopRenderTargetAndViewport();
+
+	//Restore our state
+	pRenderContext->MatrixMode(MATERIAL_VIEW);
+	pRenderContext->PopMatrix();
+	pRenderContext->MatrixMode(MATERIAL_PROJECTION);
+	pRenderContext->PopMatrix();
+
+	Rect_t actualRect;
+	UpdateScreenEffectTexture(0, x, y, w, h, false, &actualRect);
+	pRenderContext->PushRenderTargetAndViewport(m_SSAOFB2);
+	pRenderContext->DrawScreenSpaceQuad(m_SSAO);
+	pRenderContext->PopRenderTargetAndViewport();
+
+	var = m_SSAOCombine->FindVar("$maskstrength", NULL);
+	var->SetFloatValue(r_post_ssao_darkening.GetFloat());
+	var = m_SSAOCombine->FindVar("$edgestrength", NULL);
+	var->SetFloatValue(r_post_ssao_darkening_edge.GetFloat());
+
+	DrawScreenEffectMaterial(m_SSAOCombine, x, y, w, h);
+}
 

@@ -83,6 +83,13 @@ $Project
 		$File   "cubic_distortion.cpp"
 		$File   "Desaturate.cpp"
 		$File   "nightvision.cpp"
+		$File   "ssao_unsharp.cpp"
+		$File   "ssao_final.cpp"
+		$File   "ssao_combine.cpp"
+		$File   "ssao_blury.cpp"
+		$File   "ssao_blurx.cpp"
+		$File   "ssao_blur.cpp"
+		$File   "ssao.cpp"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"

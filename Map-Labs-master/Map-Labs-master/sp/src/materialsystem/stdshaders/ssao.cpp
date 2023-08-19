@@ -1,64 +1,59 @@
-//========= Copyright &copy; 1996-2002, Valve LLC, All rights reserved. ============
+//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
 //
-// Purpose: Crossroads devtest
+// Purpose: 
 //
 // $NoKeywords: $
-//=============================================================================
+//===========================================================================//
 
 #include "BaseVSShader.h"
-#include "ssao_vs30.inc"
+
+#include "screenspace_simple_vs30.inc"
 #include "ssao_ps30.inc"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
-// SHADER PARAMS DEFINED IN SHADER FXC CODE
-ConVar cr_ssao_samples( "cr_ssao_samples", "8" );
-ConVar cr_ssao_contrast( "cr_ssao_contrast", "2.0" );
-ConVar cr_ssao_radius( "cr_ssao_radius", "16" );
-ConVar cr_ssao_bias( "cr_ssao_bias", "0.02" );
-ConVar cr_ssao_bias_offset( "cr_ssao_bias_offset", "0.05" );
-ConVar cr_ssao_illuminfluence( "cr_ssao_illuminfluence", "5.0" );
-ConVar cr_ssao_zfar( "cr_ssao_zfar", "8.0" );
-ConVar cr_ssao_znear( "cr_ssao_znear", "1.0" );
 
 BEGIN_VS_SHADER_FLAGS( SSAO, "Help for SSAO", SHADER_NOT_EDITABLE )
 	BEGIN_SHADER_PARAMS
-		SHADER_PARAM( BASETEXTURE, SHADER_PARAM_TYPE_TEXTURE, "_rt_FullFrameFB", "Framebuffer" )
+		SHADER_PARAM( DEPTHBUFFER, SHADER_PARAM_TYPE_TEXTURE, "_rt_SSAOFB0", "" )
+		SHADER_PARAM( RADIUS, SHADER_PARAM_TYPE_FLOAT, "2", "" )
+		SHADER_PARAM( STRENGTH, SHADER_PARAM_TYPE_FLOAT, "1", "" )
+		SHADER_PARAM( CLAMP, SHADER_PARAM_TYPE_FLOAT, "0.5", "" )
+		SHADER_PARAM( THICKNESSMODEL, SHADER_PARAM_TYPE_FLOAT, "100", "" )
+		SHADER_PARAM( FOV, SHADER_PARAM_TYPE_FLOAT, "75", "" )
 	END_SHADER_PARAMS
-
-	SHADER_INIT_PARAMS()
-	{
-		SET_FLAGS2( MATERIAL_VAR2_NEEDS_FULL_FRAME_BUFFER_TEXTURE );
-	}
-
-	SHADER_FALLBACK
-	{
-		return 0;
-	}
 
 	SHADER_INIT
 	{
-		if( params[BASETEXTURE]->IsDefined() )
+		if( params[DEPTHBUFFER]->IsDefined() )
 		{
-			LoadTexture( BASETEXTURE );
+			LoadTexture( DEPTHBUFFER );
 		}
+	}
+	
+	SHADER_FALLBACK
+	{
+		// Requires DX9 + above
+		if ( g_pHardwareConfig->GetDXSupportLevel() < 90 || !g_pHardwareConfig->SupportsShaderModel_3_0() )
+		{
+			Assert( 0 );
+			return "Wireframe";
+		}
+		return 0;
 	}
 
 	SHADER_DRAW
 	{
 		SHADOW_STATE
 		{
-			pShaderShadow->VertexShaderVertexFormat( VERTEX_POSITION, 1, 0, 0 );
+			pShaderShadow->EnableDepthWrites( false );
+			int fmt = VERTEX_POSITION;
+			pShaderShadow->VertexShaderVertexFormat( fmt, 1, 0, 0 );
 
 			pShaderShadow->EnableTexture( SHADER_SAMPLER0, true );
-	
-			// Render targets are pegged as sRGB on POSIX, so just force these reads and writes
-			bool bForceSRGBReadAndWrite = IsOSX() && g_pHardwareConfig->CanDoSRGBReadFromRTs();
-			pShaderShadow->EnableSRGBRead( SHADER_SAMPLER0, bForceSRGBReadAndWrite );
-			pShaderShadow->EnableSRGBWrite( bForceSRGBReadAndWrite );
-			
-			DECLARE_STATIC_VERTEX_SHADER( ssao_vs30 );
-			SET_STATIC_VERTEX_SHADER( ssao_vs30 );
+
+			DECLARE_STATIC_VERTEX_SHADER(screenspace_simple_vs30);
+			SET_STATIC_VERTEX_SHADER(screenspace_simple_vs30);
 
 			DECLARE_STATIC_PIXEL_SHADER( ssao_ps30 );
 			SET_STATIC_PIXEL_SHADER( ssao_ps30 );
@@ -66,40 +61,38 @@ BEGIN_VS_SHADER_FLAGS( SSAO, "Help for SSAO", SHADER_NOT_EDITABLE )
 
 		DYNAMIC_STATE
 		{
-			BindTexture( SHADER_SAMPLER0, BASETEXTURE, -1 );
+			float g_const0[4] = { params[RADIUS]->GetFloatValue(), 0.0f, 0.0f, 0.0f };
+			pShaderAPI->SetPixelShaderConstant( 0, g_const0 );
 
-			ITexture *src_texture = params[BASETEXTURE]->GetTextureValue();
+			float g_const1[4] = { params[STRENGTH]->GetFloatValue(), 0.0f, 0.0f, 0.0f };
+			pShaderAPI->SetPixelShaderConstant( 1, g_const1 );
 
-			int width = src_texture->GetActualWidth();
-			int height = src_texture->GetActualHeight();
+			float g_const2[4] = { params[CLAMP]->GetFloatValue(), 0.0f, 0.0f, 0.0f };
+			pShaderAPI->SetPixelShaderConstant( 2, g_const2 );
 
-			float g_TexelSize[2] = { 1.0f / float( width ), 1.0f / float( height ) };
+			float g_const3[4] = { params[THICKNESSMODEL]->GetFloatValue(), 0.0f, 0.0f, 0.0f };
+			pShaderAPI->SetPixelShaderConstant( 3, g_const3 );
 
-			pShaderAPI->SetPixelShaderConstant( 0, g_TexelSize );
-			
-			DECLARE_DYNAMIC_VERTEX_SHADER( ssao_vs30 );
-			SET_DYNAMIC_VERTEX_SHADER( ssao_vs30 );
+			float g_const4[4] = { params[FOV]->GetFloatValue(), 0.0f, 0.0f, 0.0f };
+			pShaderAPI->SetPixelShaderConstant( 4, g_const4 );
+
+			int nWidth, nHeight;
+			pShaderAPI->GetBackBufferDimensions( nWidth, nHeight );
+			float g_const5[4] = { float(nWidth), float(nHeight), 0.0f, 0.0f };
+			pShaderAPI->SetPixelShaderConstant( 5, g_const5 );
+
+			float zDeltaFar = pShaderAPI->GetFloatRenderingParameter( FLOAT_RENDERPARM_MINIMUMLIGHTING );
+			float zDeltaNear = pShaderAPI->GetFloatRenderingParameter(FLOAT_RENDERPARM_MINIMUMLIGHTING);
+			float depthrange[2] = {zDeltaNear, zDeltaFar};
+			pShaderAPI->SetPixelShaderConstant( 6, depthrange );
+
+			BindTexture( SHADER_SAMPLER0, DEPTHBUFFER );
+
+			DECLARE_DYNAMIC_VERTEX_SHADER(screenspace_simple_vs30);
+			SET_DYNAMIC_VERTEX_SHADER(screenspace_simple_vs30);
 
 			DECLARE_DYNAMIC_PIXEL_SHADER( ssao_ps30 );
 			SET_DYNAMIC_PIXEL_SHADER( ssao_ps30 );
-
-			float samples = cr_ssao_samples.GetInt();
-			float contrast = cr_ssao_contrast.GetFloat();
-			float radius = cr_ssao_radius.GetFloat();
-			float bias = cr_ssao_bias.GetFloat();
-			float biasoffset = cr_ssao_bias_offset.GetFloat();
-			float illuminf = cr_ssao_illuminfluence.GetFloat();
-			float zfar = cr_ssao_zfar.GetFloat();
-			float znear = cr_ssao_znear.GetFloat();
-
-			pShaderAPI->SetPixelShaderConstant( 1, &samples );
-			pShaderAPI->SetPixelShaderConstant( 2, &radius );
-			pShaderAPI->SetPixelShaderConstant( 3, &bias );
-			pShaderAPI->SetPixelShaderConstant( 4, &illuminf );
-			pShaderAPI->SetPixelShaderConstant( 5, &contrast );
-			pShaderAPI->SetPixelShaderConstant( 6, &znear );
-			pShaderAPI->SetPixelShaderConstant( 7, &zfar );
-			pShaderAPI->SetPixelShaderConstant( 8, &biasoffset );
 		}
 		Draw();
 	}

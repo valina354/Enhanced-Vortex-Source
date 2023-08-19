@@ -80,14 +80,20 @@ static float Engine_WorldLightDistanceFalloff( const dworldlight_t *wl, const Ve
 		{
 			float dist2, dist;
 
-			dist2 = DotProduct(delta, delta);
-			dist = FastSqrt(dist2);
+			Vector vecLightToPoint = -delta;
+			dist = VectorNormalize(vecLightToPoint);
 
 			// Cull out stuff that's too far
 			if(wl->radius != 0 && dist > wl->radius)
 				return 0.f;
 
-			return 1.f / (wl->constant_attn + wl->linear_attn * dist + wl->quadratic_attn * dist2);
+			dist2 = dist * dist;
+			falloff = 1.f / (wl->constant_attn + wl->linear_attn * dist + wl->quadratic_attn * dist2);
+			if (wl->type == emit_point)
+				return falloff;
+
+			float flDot = DotProduct(vecLightToPoint, wl->normal);
+			return RemapValClamped(flDot, wl->stopdot2, wl->stopdot, 0.f, falloff);
 		}
 
 		break;

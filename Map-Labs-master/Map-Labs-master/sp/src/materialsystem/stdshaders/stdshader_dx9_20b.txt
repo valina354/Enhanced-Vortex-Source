@@ -56,3 +56,13 @@ cubic_distortion_ps2x.fxc
 desaturate_ps2x.fxc
 
 nightvision_ps2x.fxc
+
+ssao_blurx_ps2x.fxc
+
+ssao_blurx_vs20.fxc
+
+ssao_blury_vs20.fxc
+
+ssao_final_ps2x.fxc
+
+ssao_unsharp_ps2x.fxc

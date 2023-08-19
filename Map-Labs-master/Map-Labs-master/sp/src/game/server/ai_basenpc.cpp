@@ -16239,6 +16239,13 @@ void CAI_BaseNPC::ModifyOrAppendCriteria( AI_CriteriaSet& set )
 	memmove(output, output + 1, strlen(output + 1) + 1); \
 	*/
 
+// Determines if this concept isn't worth saying "Shut up" over.
+static inline bool WasUnremarkableConcept(AIConcept_t concept)
+{
+	return CompareConcepts(concept, TLK_WOUND) ||
+		CompareConcepts(concept, TLK_SHOT);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Appends enemy criteria so some classes could re-define it for, say, killing something
 //-----------------------------------------------------------------------------
@@ -16249,7 +16256,36 @@ void CAI_BaseNPC::ModifyOrAppendEnemyCriteria( AI_CriteriaSet& set, CBaseEntity 
 		set.AppendCriteria( "enemy", pEnemy->GetClassname() );
 		set.AppendCriteria( "enemyclass", g_pGameRules->AIClassText( pEnemy->Classify() ) ); // UTIL_VarArgs("%i", pEnemy->Classify())
 		set.AppendCriteria( "distancetoenemy", UTIL_VarArgs( "%f", EnemyDistance(pEnemy) ) );
+		if (pEnemy->IsCombatCharacter())
+		{
+			CBaseCombatCharacter* pBCC = pEnemy->MyCombatCharacterPointer();
+			set.AppendCriteria("enemy_on_fire", pBCC->IsOnFire() ? "1" : "0");
+			set.AppendCriteria("enemy_weapon", pBCC->GetActiveWeapon() ? pBCC->GetActiveWeapon()->GetClassname() : "0");
+
+			CAI_BaseNPC* pNPC = pBCC->MyNPCPointer();
+			if (pNPC)
+			{
+				if (pNPC->GetExpresser())
+				{
+					// That's enough outta you.
+					// (IsSpeaking() accounts for the delay as well, so it lingers beyond actual speech time)
+#ifdef NEW_RESPONSE_SYSTEM
+					if (gpGlobals->curtime < pNPC->GetExpresser()->GetTimeSpeechCompleteWithoutDelay()
+						&& !WasUnremarkableConcept(pNPC->GetExpresser()->GetLastSpokeConcept()))
+#else
+					if (gpGlobals->curtime < pNPC->GetExpresser()->GetRealTimeSpeechComplete()
+						&& !WasUnremarkableConcept(pNPC->GetExpresser()->GetLastSpokeConcept()))
+#endif
+						set.AppendCriteria("enemy_is_speaking", "1");
+				}
+
+				set.AppendCriteria("enemy_activity", CAI_BaseNPC::GetActivityName(pNPC->GetActivity()));
+			}
+		}
 		set.AppendCriteria( "timesincecombat", "-1" );
+
+		// Append their contexts
+		pEnemy->AppendContextToCriteria(set, "enemy_");
 	}
 	else
 	{

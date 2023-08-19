@@ -540,6 +540,8 @@ public:
 	inline bool SubjectUsingClassify() { return m_iSubjectClass != NUM_AI_CLASSES; }
 	inline bool TargetUsingClassify() { return m_iTargetClass != NUM_AI_CLASSES; }
 
+	void OnRestore();
+
 protected:
 
 	Class_T		m_iSubjectClass;
@@ -647,6 +649,16 @@ void CAI_ClassRelationship::ChangeRelationships( int disposition, int iReverting
 			// Apply the relationship to the target
 			CBaseCombatCharacter::SetDefaultRelationship(m_iTargetClass, m_iSubjectClass, (Disposition_t)disposition, m_iRank );
 		}
+	}
+}
+
+void CAI_ClassRelationship::OnRestore()
+{
+	BaseClass::OnRestore();
+
+	if (m_bIsActive)
+	{
+		ApplyRelationship();
 	}
 }
 #endif

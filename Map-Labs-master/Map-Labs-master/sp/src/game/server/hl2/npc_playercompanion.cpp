@@ -415,6 +415,25 @@ Disposition_t CNPC_PlayerCompanion::IRelationType( CBaseEntity *pTarget )
 	return baseRelationship;
 }
 
+#ifdef MAPBASE
+int CNPC_PlayerCompanion::IRelationPriority(CBaseEntity* pTarget)
+{
+	if (!pTarget)
+		return 0;
+
+	int iPriority = BaseClass::IRelationPriority(pTarget);
+#ifdef HL2_EPISODIC
+	// If we can shoot energy balls, prioritise hunters
+	if (IsAltFireCapable() && (m_flNextAltFireTime - 1.5f <= gpGlobals->curtime) && pTarget->Classify() == CLASS_COMBINE_HUNTER)
+	{
+		iPriority += 15;
+	}
+#endif // HL2_EPISODIC
+
+	return iPriority;
+}
+#endif // MAPBASE
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 bool CNPC_PlayerCompanion::IsSilentSquadMember() const

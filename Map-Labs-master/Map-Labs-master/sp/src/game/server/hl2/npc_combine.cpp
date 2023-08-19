@@ -3818,10 +3818,17 @@ WeaponProficiency_t CNPC_Combine::CalcWeaponProficiency( CBaseCombatWeapon *pWea
 //-----------------------------------------------------------------------------
 bool CNPC_Combine::HasShotgun()
 {
-	if( GetActiveWeapon() && GetActiveWeapon()->m_iClassname == s_iszShotgunClassname )
+#ifndef MAPBASE
+	if (GetActiveWeapon() && GetActiveWeapon()->m_iClassname == s_iszShotgunClassname)
 	{
 		return true;
 	}
+#else
+	if (GetActiveWeapon() && GetActiveWeapon()->WeaponClassify() == WEPCLASS_SHOTGUN)
+	{
+		return true;
+	}
+#endif // !MAPBASE
 
 	return false;
 }

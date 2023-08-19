@@ -127,6 +127,9 @@ public:
 	bool 			ShouldAlwaysThink();
 
 	Disposition_t	IRelationType( CBaseEntity *pTarget );
+#ifdef MAPBASE
+	virtual int		IRelationPriority(CBaseEntity* pTarget);
+#endif // MAPBASE
 	
 	bool			IsSilentSquadMember() const;
 

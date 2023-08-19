@@ -40,3 +40,11 @@ desaturate_ps2x.fxc-----desaturate_ps20
 desaturate_ps2x.fxc-----desaturate_ps20b
 nightvision_ps2x.fxc-----nightvision_ps20
 nightvision_ps2x.fxc-----nightvision_ps20b
+ssao_blurx_ps2x.fxc-----ssao_blurx_ps20
+ssao_blurx_ps2x.fxc-----ssao_blurx_ps20b
+ssao_blurx_vs20.fxc-----ssao_blurx_vs20
+ssao_blury_vs20.fxc-----ssao_blury_vs20
+ssao_final_ps2x.fxc-----ssao_final_ps20
+ssao_final_ps2x.fxc-----ssao_final_ps20b
+ssao_unsharp_ps2x.fxc-----ssao_unsharp_ps20
+ssao_unsharp_ps2x.fxc-----ssao_unsharp_ps20b

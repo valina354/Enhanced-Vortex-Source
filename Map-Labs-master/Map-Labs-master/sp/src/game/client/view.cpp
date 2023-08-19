@@ -356,6 +356,7 @@ void CViewRender::LevelInit( void )
 	g_pScreenSpaceEffects->EnableScreenSpaceEffect("c17_sunshaft");
 	g_pScreenSpaceEffects->EnableScreenSpaceEffect("vance_fxaa");
 	g_pScreenSpaceEffects->EnableScreenSpaceEffect("c17_colorcorrection");
+	g_pScreenSpaceEffects->EnableScreenSpaceEffect("c17_ssao");
 
 }
 
@@ -371,6 +372,7 @@ void CViewRender::LevelShutdown( void )
 	g_pScreenSpaceEffects->DisableScreenSpaceEffect("c17_sunshaft");
 	g_pScreenSpaceEffects->DisableScreenSpaceEffect("vance_fxaa");
 	g_pScreenSpaceEffects->DisableScreenSpaceEffect("c17_colorcorrection");
+	g_pScreenSpaceEffects->DisableScreenSpaceEffect("c17_ssao");
 
 	g_pScreenSpaceEffects->ShutdownScreenSpaceEffects( );
 }
