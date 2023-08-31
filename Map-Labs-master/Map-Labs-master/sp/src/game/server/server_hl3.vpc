@@ -27,6 +27,14 @@ $Project
 		   $File	"$SRCDIR\game\server\prop_crystal.cpp"
 		}
 		
+		$Folder	"Vance"
+		{
+		   $File	"$SRCDIR\game\server\vance\func_recharge.cpp"
+		   $File	"$SRCDIR\game\server\vance\weapon_gauss.cpp"
+		   $File	"$SRCDIR\game\server\vance\weapon_gauss.h"
+		}
+		
+		
 		$Folder	"Episode3"
 		{
 		   $File	"$SRCDIR\game\server\Episode3\npc_combine_armored.cpp"

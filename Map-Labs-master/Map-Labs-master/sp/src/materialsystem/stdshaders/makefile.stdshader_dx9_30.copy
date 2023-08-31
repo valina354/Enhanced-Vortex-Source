@@ -8,3 +8,7 @@ ssao_vs30.fxc-----ssao_vs30
 ssao_blur_ps30.fxc-----ssao_blur_ps30
 ssao_combine_ps30.fxc-----ssao_combine_ps30
 ssao_ps30.fxc-----ssao_ps30
+VertexlitPBR_ps30.fxc-----VertexlitPBR_ps30
+vertexlitPBR_vs30.fxc-----vertexlitPBR_vs30
+lightmappedPBR_ps30.fxc-----lightmappedPBR_ps30
+lightmappedPBR_vs30.fxc-----lightmappedPBR_vs30

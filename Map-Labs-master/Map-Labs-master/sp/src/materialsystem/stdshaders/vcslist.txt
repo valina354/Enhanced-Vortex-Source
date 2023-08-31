@@ -8,3 +8,7 @@
 ..\..\..\game\hl2\shaders\fxc\ssao_blur_ps30.vcs
 ..\..\..\game\hl2\shaders\fxc\ssao_combine_ps30.vcs
 ..\..\..\game\hl2\shaders\fxc\ssao_ps30.vcs
+..\..\..\game\hl2\shaders\fxc\VertexlitPBR_ps30.vcs
+..\..\..\game\hl2\shaders\fxc\vertexlitPBR_vs30.vcs
+..\..\..\game\hl2\shaders\fxc\lightmappedPBR_ps30.vcs
+..\..\..\game\hl2\shaders\fxc\lightmappedPBR_vs30.vcs

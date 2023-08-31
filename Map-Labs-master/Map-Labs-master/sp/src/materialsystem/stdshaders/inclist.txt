@@ -8,3 +8,7 @@ fxctmp9_tmp\ssao_vs30.inc
 fxctmp9_tmp\ssao_blur_ps30.inc
 fxctmp9_tmp\ssao_combine_ps30.inc
 fxctmp9_tmp\ssao_ps30.inc
+fxctmp9_tmp\VertexlitPBR_ps30.inc
+fxctmp9_tmp\vertexlitPBR_vs30.inc
+fxctmp9_tmp\lightmappedPBR_ps30.inc
+fxctmp9_tmp\lightmappedPBR_vs30.inc
