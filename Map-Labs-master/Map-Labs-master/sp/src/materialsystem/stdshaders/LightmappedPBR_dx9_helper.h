@@ -39,9 +39,17 @@ struct LightmappedPBR_DX9_Vars_t
 	int m_nBRDF;
 	int m_nUseSmoothness;
 	int m_nSeamlessMappingScale;
+	int m_nMRAOTexture;
+	int m_nBumpAlphaSmoothness;
 
+#ifdef PARALLAX_CORRECTED_CUBEMAPS
+	// Parallax cubemaps
+	int m_nEnvmapParallax; // Needed for editor
+	int m_nEnvmapParallaxObb1;
+	int m_nEnvmapParallaxObb2;
+	int m_nEnvmapParallaxObb3;
 	int m_nEnvmapOrigin;
-	int m_nEnvmapRadius;
+#endif
 };
 
 void InitParamsLightmappedPBR_DX9( CBaseVSShader *pShader, IMaterialVar** params,

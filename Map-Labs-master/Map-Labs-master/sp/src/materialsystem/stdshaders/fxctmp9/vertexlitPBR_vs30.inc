@@ -88,7 +88,7 @@ public:
 		bool bAllStaticVarsDefined = m_bVERTEXCOLOR && m_bCUBEMAP && m_bDONT_GAMMA_CONVERT_VERTEX_COLOR;
 		Assert( bAllStaticVarsDefined );
 #endif // _DEBUG
-		return ( 320 * m_nVERTEXCOLOR ) + ( 640 * m_nCUBEMAP ) + ( 1280 * m_nDONT_GAMMA_CONVERT_VERTEX_COLOR ) + 0;
+		return ( 128 * m_nVERTEXCOLOR ) + ( 256 * m_nCUBEMAP ) + ( 512 * m_nDONT_GAMMA_CONVERT_VERTEX_COLOR ) + 0;
 	}
 };
 #define shaderStaticTest_vertexlitpbr_vs30 vsh_forgot_to_set_static_VERTEXCOLOR + vsh_forgot_to_set_static_CUBEMAP + vsh_forgot_to_set_static_DONT_GAMMA_CONVERT_VERTEX_COLOR + 0
@@ -179,27 +179,6 @@ public:
 #endif
 	}
 private:
-	int m_nNUM_LIGHTS;
-#ifdef _DEBUG
-	bool m_bNUM_LIGHTS;
-#endif
-public:
-	void SetNUM_LIGHTS( int i )
-	{
-		Assert( i >= 0 && i <= 4 );
-		m_nNUM_LIGHTS = i;
-#ifdef _DEBUG
-		m_bNUM_LIGHTS = true;
-#endif
-	}
-	void SetNUM_LIGHTS( bool i )
-	{
-		m_nNUM_LIGHTS = i ? 1 : 0;
-#ifdef _DEBUG
-		m_bNUM_LIGHTS = true;
-#endif
-	}
-private:
 	int m_nDYNAMIC_LIGHT;
 #ifdef _DEBUG
 	bool m_bDYNAMIC_LIGHT;
@@ -241,6 +220,27 @@ public:
 		m_bSTATIC_LIGHT = true;
 #endif
 	}
+private:
+	int m_nMORPHING;
+#ifdef _DEBUG
+	bool m_bMORPHING;
+#endif
+public:
+	void SetMORPHING( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nMORPHING = i;
+#ifdef _DEBUG
+		m_bMORPHING = true;
+#endif
+	}
+	void SetMORPHING( bool i )
+	{
+		m_nMORPHING = i ? 1 : 0;
+#ifdef _DEBUG
+		m_bMORPHING = true;
+#endif
+	}
 public:
 	vertexlitpbr_vs30_Dynamic_Index()
 	{
@@ -261,10 +261,6 @@ public:
 #endif // _DEBUG
 		m_nLIGHTING_PREVIEW = 0;
 #ifdef _DEBUG
-		m_bNUM_LIGHTS = false;
-#endif // _DEBUG
-		m_nNUM_LIGHTS = 0;
-#ifdef _DEBUG
 		m_bDYNAMIC_LIGHT = false;
 #endif // _DEBUG
 		m_nDYNAMIC_LIGHT = 0;
@@ -272,16 +268,20 @@ public:
 		m_bSTATIC_LIGHT = false;
 #endif // _DEBUG
 		m_nSTATIC_LIGHT = 0;
+#ifdef _DEBUG
+		m_bMORPHING = false;
+#endif // _DEBUG
+		m_nMORPHING = 0;
 	}
 	int GetIndex()
 	{
 		// Asserts to make sure that we aren't using any skipped combinations.
 		// Asserts to make sure that we are setting all of the combination vars.
 #ifdef _DEBUG
-		bool bAllDynamicVarsDefined = m_bCOMPRESSED_VERTS && m_bDOWATERFOG && m_bSKINNING && m_bLIGHTING_PREVIEW && m_bNUM_LIGHTS && m_bDYNAMIC_LIGHT && m_bSTATIC_LIGHT;
+		bool bAllDynamicVarsDefined = m_bCOMPRESSED_VERTS && m_bDOWATERFOG && m_bSKINNING && m_bLIGHTING_PREVIEW && m_bDYNAMIC_LIGHT && m_bSTATIC_LIGHT && m_bMORPHING;
 		Assert( bAllDynamicVarsDefined );
 #endif // _DEBUG
-		return ( 1 * m_nCOMPRESSED_VERTS ) + ( 2 * m_nDOWATERFOG ) + ( 4 * m_nSKINNING ) + ( 8 * m_nLIGHTING_PREVIEW ) + ( 16 * m_nNUM_LIGHTS ) + ( 80 * m_nDYNAMIC_LIGHT ) + ( 160 * m_nSTATIC_LIGHT ) + 0;
+		return ( 1 * m_nCOMPRESSED_VERTS ) + ( 2 * m_nDOWATERFOG ) + ( 4 * m_nSKINNING ) + ( 8 * m_nLIGHTING_PREVIEW ) + ( 16 * m_nDYNAMIC_LIGHT ) + ( 32 * m_nSTATIC_LIGHT ) + ( 64 * m_nMORPHING ) + 0;
 	}
 };
-#define shaderDynamicTest_vertexlitpbr_vs30 vsh_forgot_to_set_dynamic_COMPRESSED_VERTS + vsh_forgot_to_set_dynamic_DOWATERFOG + vsh_forgot_to_set_dynamic_SKINNING + vsh_forgot_to_set_dynamic_LIGHTING_PREVIEW + vsh_forgot_to_set_dynamic_NUM_LIGHTS + vsh_forgot_to_set_dynamic_DYNAMIC_LIGHT + vsh_forgot_to_set_dynamic_STATIC_LIGHT + 0
+#define shaderDynamicTest_vertexlitpbr_vs30 vsh_forgot_to_set_dynamic_COMPRESSED_VERTS + vsh_forgot_to_set_dynamic_DOWATERFOG + vsh_forgot_to_set_dynamic_SKINNING + vsh_forgot_to_set_dynamic_LIGHTING_PREVIEW + vsh_forgot_to_set_dynamic_DYNAMIC_LIGHT + vsh_forgot_to_set_dynamic_STATIC_LIGHT + vsh_forgot_to_set_dynamic_MORPHING + 0

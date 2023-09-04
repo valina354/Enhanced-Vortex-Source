@@ -7,18 +7,19 @@
 // STATIC: "CONVERT_TO_SRGB"			"0..0"
 // STATIC: "FLASHLIGHT"					"0..1"
 // STATIC: "CUBEMAP"					"0..1"
-// STATIC: "CUBEMAP_SPHERE_LEGACY"		"0..1"
 // STATIC: "SMOOTHNESS"					"0..1"
 // STATIC: "SEAMLESS"                   "0..1"
 // STATIC: "BUMPMAP"                    "0..1"
+// STATIC: "PARALLAXCORRECT"			"0..1"
+// STATIC: "MRAOTEX"					"0..1"
+// STATIC: "BUMPALPHASMOOTHNESS"		"0..1"
 
 // DYNAMIC: "WRITEWATERFOGTODESTALPHA"  "0..1"
 // DYNAMIC: "PIXELFOGTYPE"				"0..1"
 // DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"	"0..1"
 // DYNAMIC: "FLASHLIGHTSHADOWS"			"0..1"
-// DYNAMIC: "CUBEMAPCORRECTED"			"0..1"
-// DYNAMIC: "CSM"						"0..1"
-// DYNAMIC: "CSM_PERF"					"0..2"
+// DYNAMIC: "CSM"						"0..0" [= 0]
+// DYNAMIC: "CSM_PERF"					"0..0" [= 0]
 // DYNAMIC: "LIGHT_PREVIEW"             "0..2"
 
 // We don't care about those in the editor
@@ -37,6 +38,13 @@
 // SKIP: ( $FLASHLIGHT == 1) && ( $CSM == 1)
 
 // SKIP: $CUBEMAP_SPHERE_LEGACY && ($CUBEMAP == 0)
+
+// SKIP: ($CSM == 0) && ($CSM_PERF != 0)
+
+// SKIP: $PARALLAXCORRECT && !$CUBEMAP
+// SKIP: ($SMOOTHNESS == 1) && ($MRAOTEX == 1)
+// SKIP: ($BUMPALPHASMOOTHNESS == 1) && ($MRAOTEX == 1)
+// SKIP: ($BUMPALPHASMOOTHNESS == 1) && ($SMOOTHNESS == 1)
 
 #include "common_flashlight_fxc.h"
 #include "shader_constant_register_map.h"
@@ -76,21 +84,29 @@ const float2 g_CascadeResolution			:  register( c32 );
 const float4 g_CascadeSize					:  register( c33 );
 #endif
 const float4 g_TintValuesAndLightmapScale	: register( c20 );
-const float4 g_EnvmapOrigin_and_Radius		: register( c21 );
-#define g_EnvmapOrigin (g_EnvmapOrigin_and_Radius.xyz)
-#define g_EnvmapRadius (g_EnvmapOrigin_and_Radius.w)
+#if PARALLAXCORRECT
+// Parallax cubemaps
+const float3 cubemapPos						: register(c21);
+const float4x4 obbMatrix					: register(c34); //through c37
+#endif
 
 #define g_FlashlightPos					g_FlashlightPos_RimBoost.xyz
 
-sampler BaseTextureSampler		: register( s0 );	// Base map, selfillum in alpha
-sampler RoughnessSampler		: register( s1 );	// Roughness
-sampler MetallicSampler			: register( s2 );	// Metallic
-sampler BumpmapSampler			: register( s3 );	// Bump map
-sampler EnvmapSampler			: register( s7 );	// for IBL
-sampler BRDFSampler				: register( s8 );	// for IBL
-sampler AOSampler				: register( s9 );	// AO
-sampler EmissiveSampler			: register( s10 );	// Emissive map
-sampler LightmapSampler			: register( s11 );	// Lightmap texture from the engine
+sampler BaseTextureSampler : register(s0); // Base map, selfillum in alpha
+sampler BumpmapSampler : register(s3); // Bump map
+
+#if MRAOTEX
+sampler MRAOTextureSampler      : register(s9);    // MRAO texture
+#else
+sampler RoughnessSampler : register(s1); // Roughness
+sampler MetallicSampler : register(s2); // Metallic
+sampler AOSampler : register(s9); // AO
+#endif
+
+sampler EnvmapSampler : register(s7); // for IBL
+sampler BRDFSampler : register(s8); // for IBL
+sampler EmissiveSampler : register(s10); // Emissive map
+sampler LightmapSampler : register(s11); // Lightmap texture from the engine
 
 // https://www.unrealengine.com/en-US/blog/physically-based-shading-on-mobile
 half3 EnvBRDFApprox( half3 SpecularColor, half Roughness, half NoV )
@@ -120,19 +136,25 @@ float3 DoIBL(float3 vWorldNormal, float3 vWorldPos, float3 albedo, float metalln
     float3 metallic = clamp(metallness, 0.0f, 0.9f);
 #if CUBEMAP == 1
 
-#if CUBEMAPCORRECTED == 0
-		float3 reflectVect = CalcReflectionVectorUnnormalized( vWorldNormal, V );
+#if PARALLAXCORRECT == 0
+	float3 reflectVect = CalcReflectionVectorUnnormalized( vWorldNormal, V );
+#define cubeReflectVect reflectVect
 #else
-		float3 reflectVect = CalcReflectionVectorUnnormalized( vWorldNormal, WorldToEye);
-		float3 BoxSize = float3(g_EnvmapRadius,g_EnvmapRadius,g_EnvmapRadius);
-		float3 BoxMax = BoxSize + g_EnvmapOrigin;
-		float3 BoxMin = -BoxSize + g_EnvmapOrigin;
-		float3 firstPlaneIntersect = (BoxMax - vWorldPos) / reflectVect;
-		float3 secondPlaneIntersect = (BoxMin - vWorldPos) / reflectVect;
-		float3 furthestPlane = max(firstPlaneIntersect, secondPlaneIntersect);
-		float planeDist = min(min(furthestPlane.x, furthestPlane.y), furthestPlane.z);
-		float3 intersectPositionWS = vWorldPos + reflectVect * planeDist;
-		reflectVect = intersectPositionWS - g_EnvmapOrigin;
+	float3 reflectVect = CalcReflectionVectorUnnormalized( vWorldNormal, V);
+		
+	//Parallax correction (2_0b and beyond)
+	//Adapted from http://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
+    float3 positionLS = mul(float4(vWorldPos, 1), obbMatrix);
+    float3 rayLS = mul(reflectVect, (float3x3) obbMatrix);
+
+    float3 firstPlaneIntersect = (float3(1.0f, 1.0f, 1.0f) - positionLS) / rayLS;
+    float3 secondPlaneIntersect = (-positionLS) / rayLS;
+    float3 furthestPlane = max(firstPlaneIntersect, secondPlaneIntersect);
+    float distance = min(furthestPlane.x, min(furthestPlane.y, furthestPlane.z));
+
+	// Use distance in WS directly to recover intersection
+    float3 intersectPositionWS = vWorldPos + reflectVect * distance;
+    float3 cubeReflectVect = intersectPositionWS - cubemapPos;
 #endif
 
 	float4 directionPosX = { 1.0f, 0.01f, 0.01f, 12.0f }; float4 directionNegX = {-1.0f, 0.01f, 0.01f, 12.0f };
@@ -158,7 +180,7 @@ float3 DoIBL(float3 vWorldNormal, float3 vWorldPos, float3 albedo, float metalln
 	kD *= 1.0 - metallic;	
 
 	float3 diffuseIBL = kD * albedo * irradiance;
-	float3 lookup = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, float4(reflectVect, roughness * 12.0)).rgb;
+    float3 lookup = ENV_MAP_SCALE * texCUBElod(EnvmapSampler, float4(cubeReflectVect, roughness * 12.0)).rgb;
 	float3 specularIrradiance = lerp(lookup, PixelShaderAmbientLight( reflectVect, envmapCube ), roughness * roughness );
 	float3 specularIBL = BRDF * specularIrradiance;
 
@@ -188,12 +210,21 @@ float3 DoFlashlight(float3 vWorldNormal, float3 vWorldPos, float3 albedo, float 
 	float4 flashlightSpacePosition = mul( float4(vWorldPos, 1.0f ), g_FlashlightWorldToTexture );
 	float3 vProjCoords = flashlightSpacePosition.xyz / flashlightSpacePosition.w;
 	float3 flashlightColor = tex2D( FlashlightSampler, vProjCoords);
+	
+	// Fix for flashlight textures without Clamp S/T
+#if defined(SHADER_MODEL_PS_2_B) || defined(SHADER_MODEL_PS_3_0)
+	clip( vProjCoords.xyz );
+	clip( 1-vProjCoords.xyz );
+#endif
+	
 	float3 shadow = 1.0f;
 	#if FLASHLIGHTSHADOWS
-	shadow = tex2DprojBicubic(ShadowDepthSampler, 512.0f.xx, vProjCoords.xy, vProjCoords.z);
+	shadow = tex2DprojBicubic(ShadowDepthSampler, g_vShadowTweaks.xx, vProjCoords.xy, vProjCoords.z);
 	#endif
-	float2 dist = float2(length(g_FlashlightPos_RimBoost.xyz - vWorldPos), dot(g_FlashlightPos_RimBoost.xyz - vWorldPos,g_FlashlightPos_RimBoost.xyz - vWorldPos));
-	float fAtten = saturate( dot( g_FlashlightAttenuationFactors.xyz, float3( 1.0f, 1.0f/dist.x, 1.0f/dist.y ) ) );
+    float2 dist = float2(length(g_FlashlightPos_RimBoost.xyz - vWorldPos), dot(g_FlashlightPos_RimBoost.xyz - vWorldPos, g_FlashlightPos_RimBoost.xyz - vWorldPos));
+    float farZ = g_FlashlightAttenuationFactors.w;
+    float endFalloffFactor = RemapValClamped(dist.x, farZ, 0.6f * farZ, 0.0f, 1.0f);
+    float fAtten = saturate(endFalloffFactor * dot(g_FlashlightAttenuationFactors.xyz, float3(1.0f, 1.0f / dist.x, 1.0f / dist.y)));
 	float3 light = DoPBRLight( vWorldPos, vWorldNormal, albedo, g_FlashlightPos_RimBoost.xyz, flashlightColor.rgb * g_FlashlightColor.xyz, g_EyePos.xyz, shadow * fAtten * g_FlashlightColor.w, metallic, roughness);
 	return light;
 }
@@ -354,21 +385,31 @@ PS_OUTPUT main(PS_INPUT i) : COLOR
     UV = i.SeamlessTexCoord;
 #endif
 	float3 worldPos = i.worldPos_projPosZ.xyz;
-#if SMOOTHNESS == 0
-	float  roughnessMap = tex2D( RoughnessSampler, UV.xy );
-#else
-	float  roughnessMap = 1.0f - tex2D( RoughnessSampler, UV.xy );
-#endif
-	float  metallicMap = tex2D( MetallicSampler, UV.xy );
-	float  AOSample = tex2D( AOSampler, UV.xy );
-	float3  EmissiveSample = tex2D( EmissiveSampler, UV.xy );
 	float4 baseColor = tex2D( BaseTextureSampler, UV.xy );
 	float4 baseColor2 = 0.0f.xxxx;
 	float4 normalTexel = 0.0f.xxxx;
 	GetBaseTextureAndNormal( BaseTextureSampler, BaseTextureSampler, BumpmapSampler, false, bBumpmap, 
-		UV, i.vertexColor.rgb, baseColor, baseColor2, normalTexel );
-
-	float3 tangentSpaceNormal = normalTexel * 2.0f - 1.0f;
+		UV, i.vertexColor.rgb, baseColor, baseColor2, normalTexel);
+#if MRAOTEX
+    float4 mraoSample = 0.0f.xxxx;
+    GetBaseTextureAndNormal(MRAOTextureSampler, MRAOTextureSampler, MRAOTextureSampler, false, false, UV, i.vertexColor.rgb, mraoSample, mraoSample, mraoSample);
+    float metallicMap = mraoSample.x, roughnessMap = mraoSample.y, AOSample = mraoSample.z;
+#else
+#if BUMPALPHASMOOTHNESS
+	float roughnessMap = 1.0f - normalTexel.a;
+#elif SMOOTHNESS
+	float roughnessMap = 1.0f - tex2D( RoughnessSampler, UV.xy );
+#else
+	float roughnessMap = tex2D( RoughnessSampler, UV.xy );
+#endif
+    float metallicMap = tex2D(MetallicSampler, UV.xy);
+    float AOSample = tex2D(AOSampler, UV.xy);
+#endif
+    float3 EmissiveSample = tex2D(EmissiveSampler, UV.xy);
+	
+	
+	
+	float3 tangentSpaceNormal = normalTexel.rgb * 2.0f - 1.0f;
 
 	float3 vWorldNormal = mul( tangentSpaceNormal, i.TBN );
 	
@@ -434,7 +475,7 @@ PS_OUTPUT main(PS_INPUT i) : COLOR
 #endif
 	float alpha = baseColor.a * g_DiffuseModulation.a;
 
-	float fogFactor = CalcPixelFogFactor( PIXELFOGTYPE, g_FogParams, g_EyePos.z, worldPos.z, i.worldPos_projPosZ.w );
+	float fogFactor = CalcPixelFogFactor( PIXELFOGTYPE, g_FogParams, g_EyePos, worldPos, i.worldPos_projPosZ.w );
 
 #if WRITEWATERFOGTODESTALPHA && ( PIXELFOGTYPE == PIXEL_FOG_TYPE_HEIGHT )
 	alpha = fogFactor;

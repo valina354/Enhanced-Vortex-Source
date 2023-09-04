@@ -331,6 +331,7 @@ END_RECV_TABLE()
 		
 
 		RecvPropString( RECVINFO(m_szLastPlaceName) ),
+		//RecvPropBool(RECVINFO(m_bShouldDrawBloodOverlay)),
 
 #ifdef MAPBASE // From Alien Swarm SDK
 		RecvPropEHandle( RECVINFO( m_hPostProcessCtrl ) ),		// Send to everybody - for spectating
@@ -485,6 +486,7 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 	m_nForceVisionFilterFlags = 0;
 
 	ListenForGameEvent( "base_player_teleported" );
+	//m_bShouldDrawBloodOverlay = false;
 }
 
 //-----------------------------------------------------------------------------
