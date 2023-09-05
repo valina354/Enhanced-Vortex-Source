@@ -27,14 +27,9 @@ $Project
 		   $File	"$SRCDIR\game\client\df_view_scene.cpp"
 		   $File	"$SRCDIR\game\client\df_view_scene.h"
 		   $File	"materialproxy_lightedmouth.cpp"
-		   $File	"menu background.cpp"
-		   $File	"menu background.h"
-		   $File	"tne_rendertargets.h"
-		   $File	"tne_rendertargets.cpp"
-		   $File	"bloodoverlayproxy.cpp"
 		}
 		
-		$Folder "Shader Editor" [$WIN32]
+			$Folder "Shader Editor" [$WIN32]
 		{
 			$Folder	"Header Files"
 			{

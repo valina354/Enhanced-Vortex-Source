@@ -671,8 +671,6 @@ private:
 
 public:
 
-	//bool m_bShouldDrawBloodOverlay;
-
 	const char *GetLastKnownPlaceName( void ) const	{ return m_szLastPlaceName; }	// return the last nav place name the player occupied
 
 	float GetLaggedMovementValue( void ){ return m_flLaggedMovementValue;	}

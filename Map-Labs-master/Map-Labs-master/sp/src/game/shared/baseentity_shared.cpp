@@ -82,7 +82,6 @@ float k_flMaxEntitySpinRate = k_flMaxAngularVelocity * 10.0f;
 ConVar	ai_shot_bias_min( "ai_shot_bias_min", "-1.0", FCVAR_REPLICATED );
 ConVar	ai_shot_bias_max( "ai_shot_bias_max", "1.0", FCVAR_REPLICATED );
 ConVar	ai_debug_shoot_positions( "ai_debug_shoot_positions", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar  debug_shoot_positions("r_show_shot_pos", "0", FCVAR_REPLICATED | FCVAR_CHEAT);
 
 // Utility func to throttle rate at which the "reasonable position" spew goes out
 static double s_LastEntityReasonableEmitTime;
@@ -1836,8 +1835,8 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 #endif
 
 #ifdef GAME_DLL
-		if (ai_debug_shoot_positions.GetBool() || debug_shoot_positions.GetBool())
-			NDebugOverlay::Line(info.m_vecSrc, vecEnd, 255, 0, 0, false, 10.0f);
+		if ( ai_debug_shoot_positions.GetBool() )
+			NDebugOverlay::Line(info.m_vecSrc, vecEnd, 255, 255, 255, false, .1 );
 #endif
 
 		if ( bStartedInWater )

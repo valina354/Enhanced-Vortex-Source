@@ -1,4 +1,4 @@
-﻿//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -407,7 +407,6 @@ public:
 	virtual int				GetMaxClip2( void ) const;
 	virtual int				GetDefaultClip1( void ) const;
 	virtual int				GetDefaultClip2( void ) const;
-	virtual int GetDefaultIsFOV(void) const; // изменяем FOV в скрипте
 	virtual int				GetWeight( void ) const;
 	virtual bool			AllowsAutoSwitchTo( void ) const;
 	virtual bool			AllowsAutoSwitchFrom( void ) const;

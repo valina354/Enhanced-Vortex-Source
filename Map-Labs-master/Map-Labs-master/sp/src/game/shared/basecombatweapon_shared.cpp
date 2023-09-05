@@ -1,4 +1,4 @@
-﻿//========= Copyright Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -515,14 +515,6 @@ bool CBaseCombatWeapon::UsesHands() const
 bool CBaseCombatWeapon::UsesClipsForAmmo2( void ) const
 {
 	return ( GetMaxClip2() != WEAPON_NOCLIP );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:  Изменение FOV в скрипте
-//-----------------------------------------------------------------------------
-int CBaseCombatWeapon::GetDefaultIsFOV(void) const
-{
-	return GetWpnData().iDefaultIsFOV;
 }
 
 //-----------------------------------------------------------------------------

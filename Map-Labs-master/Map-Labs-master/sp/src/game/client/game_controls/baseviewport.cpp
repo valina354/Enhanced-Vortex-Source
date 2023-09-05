@@ -57,8 +57,6 @@
 #include "replay/ienginereplay.h"
 #endif
 
-#include "../menu background.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -178,7 +176,6 @@ bool CBaseViewport::LoadCustomHudAnimations( const char *pszFile )
 //================================================================
 CBaseViewport::CBaseViewport() : vgui::EditablePanel( NULL, "CBaseViewport")
 {
-	m_pMainMenuPanel = NULL;
 	SetSize( 10, 10 ); // Quiet "parent not sized yet" spew
 	gViewPortInterface = this;
 	m_bInitialized = false;
@@ -223,17 +220,6 @@ CBaseViewport::CBaseViewport() : vgui::EditablePanel( NULL, "CBaseViewport")
 //-----------------------------------------------------------------------------
 void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 {
-	bool bRestartMainMenuVideo = false;
-
-	if (m_pMainMenuPanel)
-		bRestartMainMenuVideo = m_pMainMenuPanel->IsVideoPlaying();
-
-	m_pMainMenuPanel = new CMainMenu(NULL, NULL);
-	m_pMainMenuPanel->SetZPos(500);
-	m_pMainMenuPanel->SetVisible(false);
-
-	if (bRestartMainMenuVideo)
-		m_pMainMenuPanel->StartVideo();
 	BaseClass::OnScreenSizeChanged(iOldWide, iOldTall);
 
 	IViewPortPanel* pSpecGuiPanel = FindPanelByName(PANEL_SPECGUI);
@@ -497,11 +483,6 @@ IViewPortPanel* CBaseViewport::GetActivePanel( void )
 
 void CBaseViewport::RemoveAllPanels( void)
 {
-	if (m_pMainMenuPanel)
-	{
-		m_pMainMenuPanel->MarkForDeletion();
-		m_pMainMenuPanel = NULL;
-	}
 	g_lastPanel = NULL;
 	for ( int i=0; i < m_Panels.Count(); i++ )
 	{
@@ -522,9 +503,6 @@ void CBaseViewport::RemoveAllPanels( void)
 
 CBaseViewport::~CBaseViewport()
 {
-	if (!m_bHasParent && m_pMainMenuPanel)
-		m_pMainMenuPanel->MarkForDeletion();
-	m_pMainMenuPanel = NULL;
 	m_bInitialized = false;
 
 #ifndef _XBOX
@@ -546,10 +524,6 @@ CBaseViewport::~CBaseViewport()
 //-----------------------------------------------------------------------------
 void CBaseViewport::Start( IGameUIFuncs *pGameUIFuncs, IGameEventManager2 * pGameEventManager )
 {
-	m_pMainMenuPanel = new CMainMenu(NULL, NULL);
-	m_pMainMenuPanel->SetZPos(500);
-	m_pMainMenuPanel->SetVisible(false);
-	m_pMainMenuPanel->StartVideo();
 	m_GameuiFuncs = pGameUIFuncs;
 	m_GameEventManager = pGameEventManager;
 #ifndef _XBOX
@@ -761,24 +735,6 @@ void CBaseViewport::ReloadScheme(const char *fromFile)
 int CBaseViewport::GetDeathMessageStartHeight( void )
 {
 	return YRES(2);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBaseViewport::StartMainMenuVideo()
-{
-	if (m_pMainMenuPanel)
-		m_pMainMenuPanel->StartVideo();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBaseViewport::StopMainMenuVideo()
-{
-	if (m_pMainMenuPanel)
-		m_pMainMenuPanel->StopVideo();
 }
 
 void CBaseViewport::Paint()

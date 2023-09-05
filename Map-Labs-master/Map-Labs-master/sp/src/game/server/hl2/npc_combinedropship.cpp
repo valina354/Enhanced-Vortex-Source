@@ -84,9 +84,6 @@ enum DROP_STATES
 
 enum CRATE_TYPES 
 {
-#ifdef MAPBASE
-	CRATE_JALOPY = -4,
-#endif // SDK2013CE
 	CRATE_JEEP = -3,
 	CRATE_APC = -2,
 	CRATE_STRIDER = -1,
@@ -1040,31 +1037,6 @@ void CNPC_CombineDropship::Spawn( void )
 		}
 		break;
 
-#ifdef MAPBASE
-	case CRATE_JALOPY:
-		m_hContainer = (CBaseAnimating*)CreateEntityByName("prop_dynamic_override");
-		if (m_hContainer)
-		{
-			m_hContainer->SetModel("models/vehicle.mdl");
-			m_hContainer->SetName(AllocPooledString("dropship_jalopy"));
-
-			m_hContainer->SetAbsOrigin(GetAbsOrigin());//- Vector( 0, 0 , 25 ) );
-			QAngle angles = GetAbsAngles();
-			VMatrix mat, rot, result;
-			MatrixFromAngles(angles, mat);
-			MatrixBuildRotateZ(rot, -90);
-			MatrixMultiply(mat, rot, result);
-			MatrixToAngles(result, angles);
-			m_hContainer->SetAbsAngles(angles);
-
-			m_hContainer->SetParent(this, 0);
-			m_hContainer->SetOwnerEntity(this);
-			m_hContainer->SetSolid(SOLID_VPHYSICS);
-			m_hContainer->Spawn();
-		}
-		break;
-#endif // SDK2013CE
-
 	case CRATE_NONE:
 	default:
 		break;
@@ -1200,12 +1172,6 @@ void CNPC_CombineDropship::Precache( void )
 	case CRATE_JEEP:
 		PrecacheModel("models/buggy.mdl");
 		break;
-
-#ifdef MAPBASE
-	case CRATE_JALOPY:
-		PrecacheModel("models/vehicle.mdl");
-		break;
-#endif // SDK2013CE
 
 	default:
 		break;

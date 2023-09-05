@@ -68,9 +68,6 @@ public:
 
 	virtual int GetDeathMessageStartHeight( void );	
 
-	void StartMainMenuVideo();
-	void StopMainMenuVideo();
-
 	// virtual void ChatInputPosition( int *x, int *y );
 	
 public: // IGameEventListener:
@@ -127,10 +124,6 @@ protected:
 
 	};
 #endif
-
-	private:
-		class CMainMenu *m_pMainMenuPanel;
-
 protected:
 
 	virtual void Paint();

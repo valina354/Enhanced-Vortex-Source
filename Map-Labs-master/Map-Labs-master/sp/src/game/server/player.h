@@ -269,7 +269,6 @@ public:
 	CBaseViewModel			*GetViewModel( int viewmodelindex = 0, bool bObserverOK = true );
 	void					HideViewModels( void );
 	void					DestroyViewModels( void );
-	//CNetworkVar(bool, m_bShouldDrawBloodOverlay); // Have we been hit or have blood splatted on us?
 
 #ifdef MAPBASE
 	virtual void			CreateHandModel( int viewmodelindex = 1, int iOtherVm = 0 );

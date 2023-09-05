@@ -330,15 +330,6 @@ public:
 	//This pass fills in the areas that passed the alpha test with depth in dest alpha 
 	//by writing only equal depth pixels and only if we should be writing depth to dest alpha
 	void DrawEqualDepthToDestAlpha( void );
-
-
-#ifdef MAPBASE
-	// Get the dimensions of the current render target
-	void GetCurrentRenderTargetDimensions(int& nWidth, int& nHeight) const;
-
-	// Get the current viewport
-	void GetCurrentViewport(int& nX, int& nY, int& nWidth, int& nHeight) const;
-#endif // MAPBASE
 	
 private:
 	// Helper methods for VertexLitGenericPass

@@ -455,8 +455,6 @@ private:
 
 	void			DrawMonitors( const CViewSetup &cameraView );
 
-	void DrawScope(const CViewSetup &cameraView);
-
 	bool			DrawOneMonitor( ITexture *pRenderTarget, int cameraNum, C_PointCamera *pCameraEnt, const CViewSetup &cameraView, C_BasePlayer *localPlayer, 
 						int x, int y, int width, int height );
 
