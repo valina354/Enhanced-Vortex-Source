@@ -283,6 +283,7 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_afButtonReleased, FIELD_INTEGER ),
 	DEFINE_FIELD( m_afButtonDisabled, FIELD_INTEGER ),
 	DEFINE_FIELD( m_afButtonForced,	FIELD_INTEGER ),
+	//DEFINE_FIELD(m_bShouldDrawBloodOverlay, FIELD_BOOLEAN),
 
 	DEFINE_FIELD( m_iFOV,		FIELD_INTEGER ),
 	DEFINE_FIELD( m_iFOVStart,	FIELD_INTEGER ),
@@ -727,6 +728,7 @@ CBasePlayer::CBasePlayer( )
 	m_iHealth = 0;
 	Weapon_SetLast( NULL );
 	m_bitsDamageType = 0;
+	//m_bShouldDrawBloodOverlay = false;
 
 	m_bForceOrigin = false;
 	m_hVehicle = NULL;
@@ -1004,6 +1006,7 @@ int CBasePlayer::TakeHealth( float flHealth, int bitsDamageType )
 	// clear out any damage types we healed.
 	// UNDONE: generic health should not heal any
 	// UNDONE: time-based damage
+	//m_bShouldDrawBloodOverlay = false;
 	if (m_takedamage)
 	{
 		int bitsDmgTimeBased = g_pGameRules->Damage_GetTimeBased();
@@ -2112,6 +2115,9 @@ void CBasePlayer::WaterMove()
 		m_AirFinished = gpGlobals->curtime + AIRTIME;
 		return;
 	}
+
+	//if (GetWaterLevel() > WL_Feet)
+		//m_bShouldDrawBloodOverlay = false;
 
 	if ( m_iHealth < 0 || !IsAlive() )
 	{
@@ -8827,6 +8833,7 @@ void SendProxy_ShiftPlayerSpawnflags( const SendProp *pProp, const void *pStruct
 		SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
 		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
+		//SendPropBool(SENDINFO(m_bShouldDrawBloodOverlay)),
 
 #ifdef MAPBASE // From Alien Swarm SDK
 		// Postprocess data

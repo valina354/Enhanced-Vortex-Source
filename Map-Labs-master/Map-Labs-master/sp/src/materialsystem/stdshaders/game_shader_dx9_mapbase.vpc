@@ -90,6 +90,16 @@ $Project
 		$File   "ssao_blurx.cpp"
 		$File   "ssao_blur.cpp"
 		$File   "ssao.cpp"
+		$File   "LightmappedPBR_dx9.cpp"
+		$File   "LightmappedPBR_dx9_helper.cpp"
+		$File   "LightmappedPBR_dx9_helper.h"
+		$File   "VertexlitPBR_dx9.cpp"
+		$File   "VertexlitPBR_dx9_helper.cpp"
+		$File   "VertexlitPBR_dx9_helper.h"
+		$File   "common_pbr.h"
+		$File	"solidenergy_dx9.cpp"
+		$File	"solidenergy_dx9_helper.cpp"
+		$File	"solidenergy_dx9_helper.h"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"
