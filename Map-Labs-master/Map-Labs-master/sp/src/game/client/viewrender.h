@@ -441,6 +441,8 @@ public:
 		m_UnderWaterOverlayMaterial.Init( pMaterial );
 	}
 
+	void			DrawSky(const CViewSetup& view);
+
 	protected:
 		void			PerformScreenSpaceEffects(int x, int y, int w, int h);
 		virtual void DoCustomPostProcessing(const CViewSetup &view) {}
@@ -532,6 +534,7 @@ private:
 	bool m_bUsingIndexedScreenOverlays;
 #endif
 	CMaterialReference m_UnderWaterOverlayMaterial;
+	CMaterialReference	m_SkydomeMaterial;
 
 	Vector			m_vecLastFacing;
 	float			m_flCheapWaterStartDistance;

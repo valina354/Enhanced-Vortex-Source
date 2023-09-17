@@ -41,6 +41,7 @@ typedef enum {
 	DEPLOY,
 
 	// Add new shoot sound types here
+	PUMP_NPC,
 
 	NUM_SHOOT_SOUND_TYPES,
 } WeaponSound_t;

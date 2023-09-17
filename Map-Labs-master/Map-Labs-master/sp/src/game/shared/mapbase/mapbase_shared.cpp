@@ -873,3 +873,23 @@ CON_COMMAND_SHARED( con_group_toggle, "Toggles a console group." )
 {
 	ToggleConsoleGroups( args.Arg( 1 ) );
 }
+
+#ifdef CLIENT_DLL
+CON_COMMAND(whereis, "Prints the full path to a file.")
+{
+	if (args.ArgC() != 2)
+	{
+		return;
+	}
+
+	char szFullPath[MAX_PATH];
+	if (filesystem->RelativePathToFullPath(args[1], NULL, szFullPath, MAX_PATH))
+	{
+		Msg("Found: %s\n", szFullPath);
+	}
+	else
+	{
+		Msg("Not found\n");
+	}
+}
+#endif // CLIENT_DLL

@@ -877,6 +877,7 @@ private:
 
 	int					DetermineSimulationTicks( void );
 	void				AdjustPlayerTimeBase( int simulation_ticks );
+	float			m_fTimeLastHurt;
 
 public:
 	

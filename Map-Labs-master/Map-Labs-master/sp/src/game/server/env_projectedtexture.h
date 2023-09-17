@@ -8,6 +8,10 @@
 #define ENV_PROJECTEDTEXTURE_STARTON			(1<<0)
 #define ENV_PROJECTEDTEXTURE_ALWAYSUPDATE		(1<<1)
 
+#ifdef GSTRING_VOLUMETRICS
+#define ENV_PROJECTEDTEXTURE_VOLUMETRICS_START_ON	(1<<2)
+#endif // GSTRING_VOLUMETRICS
+
 #ifdef ASW_PROJECTED_TEXTURES
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -71,6 +75,9 @@ public:
 	float CorrectLinearAtten( float fl ) { return fl * 100.0f; }
 	float CorrectQuadraticAtten( float fl ) { return fl * 10000.0f; }
 #endif
+#ifdef GSTRING_VOLUMETRICS
+	void InputSetEnableVolumetrics(inputdata_t& inputdata);
+#endif // GSTRING_VOLUMETRICS
 
 	void InitialThink( void );
 
@@ -115,6 +122,15 @@ private:
 	// Not needed on the client right now, change to CNetworkVar when it actually is needed
 	bool m_bProjectedTextureVersion;
 #endif
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	CNetworkVar(bool, m_bEnableVolumetrics);
+	CNetworkVar(float, m_flVolumetricsFadeDistance);
+	CNetworkVar(int, m_iVolumetricsQuality);
+	CNetworkVar(float, m_flVolumetricsQualityBias);
+	CNetworkVar(float, m_flVolumetricsMultiplier);
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 };
 #endif
 

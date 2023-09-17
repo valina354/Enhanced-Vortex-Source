@@ -70,6 +70,8 @@ extern ConVar autoaim_max_dist;
 extern ConVar player_squad_autosummon_enabled;
 #endif
 
+static ConVar sv_weapon_drop_enabled("sv_weapon_drop_enabled", "1");
+
 // Do not touch with without seeing me, please! (sjb)
 // For consistency's sake, enemy gunfire is traced against a scaled down
 // version of the player's hull, not the hitboxes for the player's model
@@ -1146,6 +1148,17 @@ void CHL2_Player::PreThink(void)
 			if ( !m_hUseEntity || ( pWep && pWep->IsWeaponVisible() ) )
 	#endif
 			m_nButtons &= ~(IN_ATTACK|IN_ATTACK2);
+
+			if (m_afButtonPressed & IN_DROP)
+			{
+				if (IsAlive() &&
+					!IsInAVehicle() &&
+					HasWeapons() &&
+					sv_weapon_drop_enabled.GetBool())
+				{
+					DropActiveWeapon();
+				}
+			}
 		}
 	}
 }
@@ -1274,6 +1287,17 @@ Class_T  CHL2_Player::Classify ( void )
 			return CLASS_PLAYER;
 		}
 	}
+}
+
+void CHL2_Player::DropActiveWeapon(void)
+{
+	Vector VecForward;
+
+	EyeVectors(&VecForward, NULL, NULL);
+
+	VecForward *= 300.0f;
+
+	BaseClass::Weapon_Drop(GetActiveWeapon(), NULL, &VecForward);
 }
 
 //-----------------------------------------------------------------------------
@@ -1814,7 +1838,7 @@ bool CHL2_Player::CommanderFindGoal( commandgoal_t *pGoal )
 	// Get either our +USE entity or the gravity gun entity
 	CBaseEntity *pHeldEntity = GetPlayerHeldEntity(this);
 	if ( !pHeldEntity )
-		PhysCannonGetHeldEntity( GetActiveWeapon() );
+		pHeldEntity = PhysCannonGetHeldEntity(GetActiveWeapon());
 
 	CTraceFilterSkipTwoEntities filter( this, pHeldEntity, COLLISION_GROUP_INTERACTIVE_DEBRIS );
 #else

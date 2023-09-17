@@ -4,12 +4,12 @@
 //
 //==================================================================================================
 
+
 // STATIC: "CONVERT_TO_SRGB"			"0..0"
 // STATIC: "FLASHLIGHT"					"0..1"
 // STATIC: "CUBEMAP"					"0..1"
+// STATIC: "CUBEMAP_SPHERE_LEGACY"		"0..1"
 // STATIC: "SMOOTHNESS"					"0..1"
-// STATIC: "MRAOTEX"					"0..1"
-// STATIC: "BUMPALPHASMOOTHNESS"		"0..1"
 
 // DYNAMIC: "WRITEWATERFOGTODESTALPHA"  "0..1"
 // DYNAMIC: "PIXELFOGTYPE"				"0..1"
@@ -17,12 +17,10 @@
 // DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"	"0..1"
 // DYNAMIC: "FLASHLIGHTSHADOWS"			"0..1"
 // DYNAMIC: "LIGHTMAP"					"0..1"
-// DYNAMIC: "CSM"						"0..0" [= 0]
-// DYNAMIC: "CSM_PERF"					"0..0" [= 0]
 // DYNAMIC: "LIGHT_PREVIEW"				"0..2"
 
 // We don't care about those in the editor
-// SKIP: ($CUBEMAP || $FLASHLIGHT) && $LIGHT_PREVIEW
+// SKIP: ($CUBEMAP || FLASHLIGHT ) && $LIGHT_PREVIEW
 
 // SKIP: ($PIXELFOGTYPE == 0) && ($WRITEWATERFOGTODESTALPHA != 0)
 
@@ -31,23 +29,13 @@
 
 // SKIP: ( $CUBEMAP == 1 ) && ( $FLASHLIGHT == 1 )
 
-// both cant exist at the same time
-// SKIP: ( $FLASHLIGHT == 1) && ( $CSM == 1)
-
 // SKIP: $CUBEMAP_SPHERE_LEGACY && ($CUBEMAP == 0)
 
-// SKIP: ($LIGHTMAP && $FLASHLIGHT)
-
-// SKIP: ($CSM == 0) && ($CSM_PERF != 0)
-
-// SKIP: $SMOOTHNESS && $MRAOTEX
-// SKIP: ($BUMPALPHASMOOTHNESS == 1) && ($MRAOTEX == 1)
-// SKIP: ($BUMPALPHASMOOTHNESS == 1) && ($SMOOTHNESS == 1)
+// SKIP: ($CUBEMAP || FLASHLIGHT )
 
 #include "common_flashlight_fxc.h"
 #include "shader_constant_register_map.h"
 #include "common_pbr.h"
-#include "deferred_shadows.h"
 
 #ifdef NV3X
   #define PSHADER_VECT_SCALE 20.0
@@ -71,36 +59,23 @@ const float4 g_FlashlightAttenuationFactors	: register( PSREG_FLASHLIGHT_ATTENUA
 const float4 g_FlashlightPos_RimBoost		: register( PSREG_FLASHLIGHT_POSITION_RIM_BOOST );
 const float4 g_FlashlightColor				: register( PSREG_FLASHLIGHT_COLOR );
 const float4x4 g_FlashlightWorldToTexture	: register( PSREG_FLASHLIGHT_TO_WORLD_TEXTURE );
-#elif CSM == 1
-sampler ShadowDepthSampler					: register( s4 );	// CSM Depth
-
-const float4x4 g_CSMWorldToTexture			:  register( c32 );
-const float4 g_CascadeFwd					:  register( c36 );
-const float4 g_CascadeLight					:  register( c37 );
-const float4 g_CascadeAmbient				:  register( c38 );
-const float2 g_CascadeBias					:  register( c39 );
-const float2 g_CascadeResolution			:  register( c40 );
-const float4 g_CascadeSize					:  register( c41 );
 #endif
 PixelShaderLightInfo cLightInfo[3]			: register( PSREG_LIGHT_INFO_ARRAY );				// 2 registers each - 6 registers total (4th light spread across w's)
 
 #define g_FlashlightPos					g_FlashlightPos_RimBoost.xyz
 
-sampler BaseTextureSampler : register(s0); // Base map, selfillum in alpha
-sampler BumpmapSampler : register(s3); // Bump map
+sampler BaseTextureSampler		: register( s0 );	// Base map, selfillum in alpha
+sampler RoughnessSampler		: register( s1 );	// Roughness
+sampler MetallicSampler			: register( s2 );	// Metallic
+sampler BumpmapSampler			: register( s3 );	// Bump map
 
-#if MRAOTEX
-sampler MRAOTextureSampler      : register(s9);    // MRAO texture
-#else
-sampler RoughnessSampler : register(s1); // Roughness
-sampler MetallicSampler : register(s2); // Metallic
-sampler AOSampler : register(s9); // AO
-#endif
 
-sampler EnvmapSampler : register(s7); // for IBL
-sampler BRDFSampler : register(s8); // for IBL
-sampler EmissiveSampler : register(s10); // Emissive map
-sampler LightmapSampler : register(s11); // Lightmap texture from the engine
+
+sampler EnvmapSampler			: register( s7 );	// for IBL
+sampler BRDFSampler				: register( s8 );	// for IBL
+sampler AOSampler				: register( s9 );	// AO
+sampler EmissiveSampler			: register( s10 );	// Emissive map
+sampler LightmapSampler			: register( s11 );	// Lightmap texture from the engine
 
 //DoPBRLight(float3 vWorldPos, float3 vWorldNormal, float3 albedo, float3 vPosition, float3 vColor, float3 vEye, float atten_radius, float3 metallic, float3 roughness)
 float3 DoPBRLights(float3 vEye, float3 vWorldNormal, float3 vWorldPos, float4 albedo, float4 atten, float3 lightmap, float metallic, float roughness)
@@ -113,16 +88,16 @@ float3 DoPBRLights(float3 vEye, float3 vWorldNormal, float3 vWorldPos, float4 al
 		linearColor += DoPBRLight(vWorldPos, vWorldNormal, albedo, cLightInfo[0].pos, cLightInfo[0].color.rgb, vEye, atten.x, metallic, roughness);
 		if ( NUM_LIGHTS > 1 )
 		{
-			linearColor += DoPBRLight( vWorldPos, vWorldNormal, albedo, cLightInfo[1].pos, cLightInfo[1].color.rgb, vEye, atten.y, metallic, roughness);
+			linearColor += DoPBRLight( vWorldPos, vWorldNormal, albedo, cLightInfo[1].pos, cLightInfo[1].color.rgb, vEye, atten.x, metallic, roughness);
 			if ( NUM_LIGHTS > 2 )
 			{
-				linearColor += DoPBRLight( vWorldPos, vWorldNormal, albedo, cLightInfo[2].pos, cLightInfo[2].color.rgb, vEye, atten.z, metallic, roughness);
+				linearColor += DoPBRLight( vWorldPos, vWorldNormal, albedo, cLightInfo[2].pos, cLightInfo[2].color.rgb, vEye, atten.x, metallic, roughness);
 				if ( NUM_LIGHTS > 3 )
 				{
 					// Unpack the 4th light's data from tight constant packing
 					float3 vLight3Color = float3( cLightInfo[0].color.w, cLightInfo[0].pos.w, cLightInfo[1].color.w );
 					float3 vLight3Pos = float3( cLightInfo[1].pos.w, cLightInfo[2].color.w, cLightInfo[2].pos.w );
-					linearColor += DoPBRLight( vWorldPos, vWorldNormal, albedo, vLight3Pos, vLight3Color, vEye, atten.w, metallic, roughness);
+					linearColor += DoPBRLight( vWorldPos, vWorldNormal, albedo, vLight3Pos, vLight3Color, vEye, atten.x, metallic, roughness);
 				}
 			}
 		}
@@ -247,144 +222,20 @@ float3 DoIBL(float3 vEye, float3 vWorldNormal, float3 vWorldPos, float2 screenUV
 }
 
 #if FLASHLIGHT == 1
-float3 DoFlashlight(float3 vWorldNormal, float3 vWorldPos, float3 albedo, float metallic, float roughness)
+float3 DoFlashlight(float3 vWorldNormal, float3 vWorldPos, float2 vScreenCords, float3 albedo, float metallic, float roughness)
 {
 	float4 flashlightSpacePosition = mul( float4(vWorldPos, 1.0f ), g_FlashlightWorldToTexture );
 	float3 vProjCoords = flashlightSpacePosition.xyz / flashlightSpacePosition.w;
 	float3 flashlightColor = tex2D( FlashlightSampler, vProjCoords);
-
-	// Fix for flashlight textures without Clamp S/T
-#if defined(SHADER_MODEL_PS_2_B) || defined(SHADER_MODEL_PS_3_0)
-	clip( vProjCoords.xyz );
-	clip( 1-vProjCoords.xyz );
-#endif
-
-	float shadow = 1.0f;
+	float3 shadow = 1.0f;
 	#if FLASHLIGHTSHADOWS
-	shadow = tex2DprojBicubic(ShadowDepthSampler, g_ShadowTweaks.xx, vProjCoords.xy, vProjCoords.z);
+	shadow = DoFlashlightShadow( ShadowDepthSampler, NormalizeRandRotSampler, vProjCoords, vScreenCords, 0, g_ShadowTweaks, false );
+	//shadow = tex2DprojBicubic(ShadowDepthSampler, 512.0f.xx, vProjCoords.xy, vProjCoords.z);
 	#endif
 	float2 dist = float2(length(g_FlashlightPos_RimBoost.xyz - vWorldPos), dot(g_FlashlightPos_RimBoost.xyz - vWorldPos,g_FlashlightPos_RimBoost.xyz - vWorldPos));
-    float farZ = g_FlashlightAttenuationFactors.w;
-    float endFalloffFactor = RemapValClamped(dist.x, farZ, 0.6f * farZ, 0.0f, 1.0f);
-	float fAtten = saturate( endFalloffFactor * dot( g_FlashlightAttenuationFactors.xyz, float3( 1.0f, 1.0f/dist.x, 1.0f/dist.y ) ) );
+	float fAtten = saturate( dot( g_FlashlightAttenuationFactors.xyz, float3( 1.0f, 1.0f/dist.x, 1.0f/dist.y ) ) );
 	float3 light = DoPBRLight( vWorldPos, vWorldNormal, albedo, g_FlashlightPos_RimBoost.xyz, flashlightColor.rgb * g_FlashlightColor.xyz, g_EyePos.xyz, shadow * fAtten * g_FlashlightColor.w, metallic, roughness);
 	return light;
-}
-#elif CSM == 1
-float DoCSM( sampler DepthSampler, const float3 vProjCoords, float vViewDepth, float LdN )
-{
-	float2 rtSize = g_CascadeResolution;//float2(4096.0f * 4.0f, 4096.0f) * 2.0f;
-	float fEpsilonX    = 1.0f / rtSize.y;
-	float fEpsilonY    = 1.0f / rtSize.x;
-
-#if CSM_PERF < 1
-	float3 cascade0 = float3( float2((vProjCoords.x / 4), vProjCoords.y), vProjCoords.z);
-	float3 cascade1 = float3( float2((vProjCoords.x / 4) + (g_CascadeSize.y - 2 - 1.0f/8.0f - 0.5), vProjCoords.y + (g_CascadeSize.y - 1) / 2) / g_CascadeSize.y, vProjCoords.z);
-#endif
-#if CSM_PERF < 2
-	float3 cascade2 = float3( float2((vProjCoords.x / 4) + (g_CascadeSize.z - 3 - 1.0f/8.0f), vProjCoords.y + (g_CascadeSize.z - 1) / 2) / g_CascadeSize.z, vProjCoords.z);
-#endif
-	float3 cascade3 = float3( float2((vProjCoords.x / 4) + (g_CascadeSize.w - 4 - 1.0f/8.0f), vProjCoords.y + (g_CascadeSize.w - 1) / 2) / g_CascadeSize.w, vProjCoords.z);
-
-	float projMask = 1.0f;
-	if(vViewDepth >= g_CascadeSize.w * g_CascadeSize.x - 100)
-	{
-		projMask = 0.0f;
-	}
-	
-	float4 vShadowTweaks = float4(fEpsilonX, fEpsilonY, 0.0f, 0.0f);
-#if CSM_PERF < 1
-	float shadowProjDiff0 = 1;
-	float3 shadowMapCenter_objDepth0 = cascade0;
-	float2 shadowMapCenter0 = shadowMapCenter_objDepth0.xy;
-	float objDepth0 = shadowMapCenter_objDepth0.z + g_CascadeBias.y * (g_CascadeBias.x * LdN) * shadowProjDiff0;
-	float3 vShadowPos0 = float3(shadowMapCenter0, objDepth0);
-	
-	float shadowProjDiff1 = g_CascadeSize.y;
-	float3 shadowMapCenter_objDepth1 = cascade1;
-	float2 shadowMapCenter1 = shadowMapCenter_objDepth1.xy;
-	float objDepth1 = shadowMapCenter_objDepth1.z + g_CascadeBias.y * (g_CascadeBias.x * LdN) * shadowProjDiff1;
-	float3 vShadowPos1 = float3(shadowMapCenter1, objDepth1);
-#endif
-
-#if CSM_PERF < 2
-	float shadowProjDiff2 = g_CascadeSize.z;
-	float3 shadowMapCenter_objDepth2 = cascade2;
-	float2 shadowMapCenter2 = shadowMapCenter_objDepth2.xy;
-	float objDepth2 = shadowMapCenter_objDepth2.z + g_CascadeBias.y * (g_CascadeBias.x * LdN) * shadowProjDiff2;
-	float3 vShadowPos2 = float3(shadowMapCenter2, objDepth2);
-#endif
-
-	float shadowProjDiff3 = g_CascadeSize.w;
-	float3 shadowMapCenter_objDepth3 = cascade3;
-	float2 shadowMapCenter3 = shadowMapCenter_objDepth3.xy;
-	float objDepth3 = shadowMapCenter_objDepth3.z + g_CascadeBias.y * (g_CascadeBias.x * LdN) * shadowProjDiff3;
-	float3 vShadowPos3 = float3(shadowMapCenter3, objDepth3);
-
-	/*float shadow0 = tex2DprojBilinear(DepthSampler,rtSize, shadowMapCenter0.xy, objDepth0);
-	float shadow1 = tex2DprojBilinear(DepthSampler,rtSize, shadowMapCenter1.xy, objDepth1);
-	float shadow2 = tex2DprojBilinear(DepthSampler,rtSize, shadowMapCenter2.xy, objDepth2);
-	float shadow3 = tex2DprojBilinear(DepthSampler,rtSize, shadowMapCenter3.xy, objDepth3);*/
-	
-	float shadow3 = PCF(DepthSampler,rtSize, shadowMapCenter3.xy, objDepth3);
-
-#if CSM_PERF < 2
-	float shadow2 = PCF(DepthSampler,rtSize, shadowMapCenter2.xy, objDepth2);
-#else
-	float shadow2 = shadow3;
-#endif
-
-#if CSM_PERF < 1
-	float shadow1 = PCF(DepthSampler,rtSize, shadowMapCenter1.xy, objDepth1);
-	float shadow0 = PCF(DepthSampler,rtSize, shadowMapCenter0.xy, objDepth0);
-#else
-	float shadow1 = shadow2;
-	float shadow0 = shadow2;
-#endif
-
-
-	/*float shadow0 = DoShadowNvidiaPCF5x5GaussianEx(DepthSampler, vShadowPos0, vShadowTweaks);
-	float shadow1 = DoShadowNvidiaPCF5x5GaussianEx(DepthSampler, vShadowPos1, vShadowTweaks);
-	float shadow2 = DoShadowNvidiaPCF5x5GaussianEx(DepthSampler, vShadowPos2, vShadowTweaks);
-	float shadow3 = DoShadowNvidiaPCF5x5GaussianEx(DepthSampler, vShadowPos3, vShadowTweaks);
-
-	float shadow0 = DoShadowRAWZ(DepthSampler, float4(vShadowPos0, 1.0f));
-	float shadow1 = DoShadowRAWZ(DepthSampler, float4(vShadowPos1, 1.0f));
-	float shadow2 = DoShadowRAWZ(DepthSampler, float4(vShadowPos2, 1.0f));
-	float shadow3 = DoShadowRAWZ(DepthSampler, float4(vShadowPos3, 1.0f));*/
-
-
-	float shadow01 = lerp(shadow0,shadow1,pow(saturate(vViewDepth / (g_CascadeSize.x - 6)), 20.0f));
-	float shadow012 = lerp(shadow01,shadow2,pow(saturate(vViewDepth / (g_CascadeSize.y * g_CascadeSize.x - 6)), 20.0f));
-	float shadow0123 = lerp(shadow012,shadow3,pow(saturate(vViewDepth / (g_CascadeSize.z * g_CascadeSize.x - 6)), 20.0f));
-
-	float shadow = shadow0123;
-
-	if(projMask == 1.0f)
-	{
-		float smoothCSMMask = pow(saturate(vViewDepth / (g_CascadeSize.w * g_CascadeSize.x - 100)), 20.0f);
-		float shadowFinal = lerp(shadow, 1.0f, smoothCSMMask);
-		return shadowFinal;
-	}
-	else
-	{
-		return 1.0f;
-	}
-	
-}
-
-float3 DoPBRCSM(in float3 worldPos, in float3 worldNormal, float3 albedo, float metallic, float roughness, float ViewZ)
-{
-    float3 Out;
-    float LdN = max(1.0f - saturate(dot(worldNormal, -g_CascadeFwd.xyz)), 0.01);
-    float4 flashlightSpacePosition = mul(float4(worldPos, 1.0f), g_CSMWorldToTexture);
-    float3 vProjCoords = flashlightSpacePosition.xyz / flashlightSpacePosition.w;
-    float3 flShadow = DoCSM(ShadowDepthSampler, vProjCoords, ViewZ, LdN);
-    float diffuse = dot(worldNormal, -g_CascadeFwd.xyz);
-    diffuse = saturate(diffuse);
-
-    Out = DoPBRLight(worldPos, worldNormal, albedo, (-g_CascadeFwd.xyz * 4096) + g_EyePos, g_CascadeLight, g_EyePos, flShadow, metallic, roughness);
-    return Out;
 }
 #endif
 
@@ -398,7 +249,7 @@ struct PS_INPUT
 	float4 color		: TEXCOORD5;
 	float3 localPos		: TEXCOORD6;		// for Irradiance calculations
 	float4 vWorldTangent: TEXCOORD7;
-    float4 vWorldBinormal_fWrinkleWeight : TEXCOORD8;
+	float3 vWorldBinormal: TEXCOORD8;
 };
 
 struct PS_OUTPUT
@@ -420,24 +271,18 @@ PS_OUTPUT main(PS_INPUT i) : COLOR
 	float2 UV = i.baseTexCoord;
 	float2 screenUV = i.projPos.xy / i.projPos.w;
 	screenUV = screenUV * 0.5f + 0.5f;
-    float4 baseColor = tex2D(BaseTextureSampler, UV);
-    float4 normalTexel = tex2D(BumpmapSampler, UV);
+	float4 baseColor = tex2D( BaseTextureSampler, UV );
 
-#if MRAOTEX
-    float3 mraoSample = tex2D(MRAOTextureSampler, UV.xy).xyz;
-    float metallicMap = mraoSample.x, roughnessMap = mraoSample.y, AOSample = mraoSample.z;
+#if SMOOTHNESS == 0
+	float  roughnessMap = tex2D( RoughnessSampler, UV );
 #else
-#if BUMPALPHASMOOTHNESS
-	float roughnessMap = 1.0f - normalTexel.a;
-#elif SMOOTHNESS
-	float roughnessMap = 1.0f - tex2D( RoughnessSampler, UV.xy );
-#else
-    float roughnessMap = tex2D(RoughnessSampler, UV.xy);
+	float  roughnessMap = 1.0f - tex2D( RoughnessSampler, UV );
 #endif
-    float metallicMap = tex2D(MetallicSampler, UV.xy);
-    float AOSample = tex2D(AOSampler, UV.xy);
-#endif
+
+	float  metallicMap = tex2D( MetallicSampler, UV );
+	float  AOSample = tex2D( AOSampler, UV );
 	float3  EmissiveSample = tex2D( EmissiveSampler, UV );
+	float4 normalTexel = tex2D( BumpmapSampler, UV);
 	float3 lightmapTexel = GammaToLinear( 2.0f * tex2D( LightmapSampler, UV ).rgb );
 
 	float3 worldPos = i.worldPos;
@@ -446,8 +291,8 @@ PS_OUTPUT main(PS_INPUT i) : COLOR
 	float3 albedo = g_DiffuseModulation.rgb * baseColor.rgb;
 	bool bCubemap = (CUBEMAP) ? true : false;
 	
-	float3 tangentSpaceNormal = normalTexel.rgb * 2.0f - 1.0f;
-    float3 vWorldBinormal = i.vWorldBinormal_fWrinkleWeight.xyz;
+	float3 tangentSpaceNormal = normalTexel * 2.0f - 1.0f;
+	float3 vWorldBinormal = i.vWorldBinormal;
 
 	float3 vWorldNormal = Vec3TangentToWorld( tangentSpaceNormal, worldNormal, i.vWorldTangent, vWorldBinormal );
 	vWorldNormal = normalize( vWorldNormal );
@@ -461,22 +306,18 @@ PS_OUTPUT main(PS_INPUT i) : COLOR
 #endif
 	float3 IBL = DoIBL(g_EyePos.xyz, vWorldNormal, worldPos, screenUV, baseColor.rgb, metallicMap, roughnessMap, lightmapTexel);
 #if FLASHLIGHT
-	float3 Flashlight = DoFlashlight(vWorldNormal, worldPos, baseColor.rgb, metallicMap, roughnessMap);
-#elif CSM == 1
-	float3 CSMLight = DoPBRCSM(worldPos, vWorldNormal, baseColor.rgb, metallicMap, roughnessMap, length(worldPos - g_EyePos));
+	float3 Flashlight = DoFlashlight(vWorldNormal, worldPos, i.projPos.xy / i.projPos.w, baseColor.rgb, metallicMap, roughnessMap);
 #endif
 
 	float3 result = (
 #if FLASHLIGHT
 		Flashlight);
-#elif CSM == 1
-		CSMLight + Lighting + IBL * AOSample) + EmissiveSample;
 #else
 		Lighting + IBL * AOSample) + EmissiveSample;
 #endif
 	float alpha = baseColor.a * g_DiffuseModulation.a;
 
-	float fogFactor = CalcPixelFogFactor( PIXELFOGTYPE, g_FogParams, g_EyePos, i.worldPos, i.projPos.z );
+	float fogFactor = CalcPixelFogFactor( PIXELFOGTYPE, g_FogParams, g_EyePos.z, i.worldPos.z, i.projPos.z );
 
 #if WRITEWATERFOGTODESTALPHA && ( PIXELFOGTYPE == PIXEL_FOG_TYPE_HEIGHT )
 	alpha = fogFactor;
@@ -500,7 +341,7 @@ PS_OUTPUT main(PS_INPUT i) : COLOR
 	bool bWriteDepthToAlpha = ( WRITE_DEPTH_TO_DESTALPHA != 0 ) && ( WRITEWATERFOGTODESTALPHA == 0 );
     output.MainOut = FinalOutput(float4(result, alpha), fogFactor, PIXELFOGTYPE, TONEMAP_SCALE_LINEAR, bWriteDepthToAlpha, i.projPos.z);
 #if !FLASHLIGHT
-    output.Normal = float4(vWorldNormal.xyz, 1.0f);
+    output.Normal = float4(vWorldNormal.xyz, i.projPos.z / i.projPos.w);
     output.MRAO = float4(metallicMap, roughnessMap, AOSample, 0.0f);
     output.Albedo = float4(baseColor.xyz, 1.0f);
 #endif

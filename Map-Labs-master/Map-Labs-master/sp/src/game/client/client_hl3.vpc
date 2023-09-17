@@ -17,6 +17,14 @@ $Project
 		   $File	"$SRCDIR\game\client\c_npc_icedog.cpp"
 		}
 		
+		$Folder "TE120"
+		{
+				$File	"te120\c_weapon_physconcussion.cpp"
+				$File	"te120\c_prop_gravity_ball.cpp"
+				$File	"te120\c_prop_gravity_ball.h"
+		}
+
+		
 		$Folder	"downfallandrandomstuff"
 		{
 		   $File	"$SRCDIR\game\client\shaderapihack.h"
@@ -32,6 +40,8 @@ $Project
 		   $File	"tne_rendertargets.h"
 		   $File	"tne_rendertargets.cpp"
 		   $File	"bloodoverlayproxy.cpp"
+		   $File   "$SRCDIR\game\shared\mt19937_random.h"
+           $File   "$SRCDIR\game\shared\mt19937_random.cpp"
 		}
 		
 		$Folder "Shader Editor" [$WIN32]

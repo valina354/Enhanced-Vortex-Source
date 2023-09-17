@@ -24,6 +24,17 @@
 //-----------------------------------------------------------------------------
 struct FlashlightState_t;
 
+#ifdef GSTRING_VOLUMETRICS
+struct VolumetricState_t
+{
+	bool m_bEnableVolumetrics;
+	float m_flVolumetricsFadeDistance;
+	int m_iVolumetricsQuality;
+	float m_flVolumetricsMultiplier;
+	float m_flVolumetricsQualityBias;
+};
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Handles to a client shadow
@@ -97,7 +108,7 @@ public:
 	// Set flashlight light world flag
 	virtual void SetFlashlightLightWorld( ClientShadowHandle_t shadowHandle, bool bLightWorld ) = 0;
 
-#ifdef ASW_PROJECTED_TEXTURES
+#if defined(ASW_PROJECTED_TEXTURES) || defined(GSTRING_VOLUMETRICS)
 	virtual void GetFrustumExtents( ClientShadowHandle_t handle, Vector &vecMin, Vector &vecMax ) = 0;
 #endif
 
@@ -109,6 +120,12 @@ public:
 	virtual void SetShadowsDisabled( bool bDisabled ) = 0;
 
 	virtual void ComputeShadowDepthTextures(const CViewSetup &pView) = 0;
+
+
+#ifdef GSTRING_VOLUMETRICS
+	virtual bool VolumetricsAvailable() = 0;
+	virtual void UpdateFlashlightVolumetrics(ClientShadowHandle_t shadowHandle, const VolumetricState_t& lightState) = 0;
+#endif // GSTRING_VOLUMETRICS
 
 };
 

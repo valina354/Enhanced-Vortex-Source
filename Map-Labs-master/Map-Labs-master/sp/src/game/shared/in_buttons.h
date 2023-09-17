@@ -41,6 +41,7 @@
 #define IN_BULLRUSH		(1 << 22)
 #define IN_GRENADE1		(1 << 23)	// grenade 1
 #define IN_GRENADE2		(1 << 24)	// grenade 2
+#define IN_DROP	(1 << 25) // Weapon drop system.
 #define	IN_ATTACK3		(1 << 25)
 
 #ifdef VGUI_SCREEN_FIX

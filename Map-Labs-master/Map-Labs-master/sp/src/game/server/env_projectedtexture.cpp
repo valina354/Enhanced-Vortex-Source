@@ -87,6 +87,17 @@ BEGIN_DATADESC( CEnvProjectedTexture )
 	DEFINE_INPUTFUNC( FIELD_VOID, "StartFollowingTarget", InputStartFollowingTarget ),
 #endif
 	DEFINE_THINKFUNC( InitialThink ),
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "EnableVolumetrics", InputSetEnableVolumetrics),
+	//SendPropBool( SENDINFO( m_bProjectedTextureVersion ) ),
+	DEFINE_FIELD(m_bEnableVolumetrics, FIELD_BOOLEAN),
+	DEFINE_KEYFIELD(m_flVolumetricsFadeDistance, FIELD_FLOAT, "volumetricsfadedistance"),
+	DEFINE_KEYFIELD(m_iVolumetricsQuality, FIELD_INTEGER, "volumetricsquality"),
+	DEFINE_KEYFIELD(m_flVolumetricsQualityBias, FIELD_FLOAT, "volumetricsqualitybias"),
+	DEFINE_KEYFIELD(m_flVolumetricsMultiplier, FIELD_FLOAT, "volumetricsmultiplier"),
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST( CEnvProjectedTexture, DT_EnvProjectedTexture )
@@ -124,6 +135,15 @@ IMPLEMENT_SERVERCLASS_ST( CEnvProjectedTexture, DT_EnvProjectedTexture )
 	// Not needed on the client right now, change when it actually is needed
 	//SendPropBool( SENDINFO( m_bProjectedTextureVersion ) ),
 #endif
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	SendPropBool(SENDINFO(m_bEnableVolumetrics)),
+	SendPropFloat(SENDINFO(m_flVolumetricsFadeDistance)),
+	SendPropInt(SENDINFO(m_iVolumetricsQuality)),
+	SendPropFloat(SENDINFO(m_flVolumetricsQualityBias)),
+	SendPropFloat(SENDINFO(m_flVolumetricsMultiplier)),
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 END_SEND_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -163,6 +183,14 @@ CEnvProjectedTexture::CEnvProjectedTexture( void )
 	m_flShadowAtten = 0.0f;
 	m_flShadowFilter = 0.5f;
 #endif
+
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	m_flVolumetricsQualityBias = 3.f;
+	m_iVolumetricsQuality = 60;
+	m_flVolumetricsMultiplier = 0.6f;
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 }
 
 void UTIL_ColorStringToLinearFloatColor( Vector &color, const char *pString )
@@ -410,6 +438,9 @@ void CEnvProjectedTexture::Spawn( void )
 
 	m_bState = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_STARTON ) != 0 );
 	m_bAlwaysUpdate = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_ALWAYSUPDATE ) != 0 );
+#ifdef GSTRING_VOLUMETRICS
+	m_bEnableVolumetrics = HasSpawnFlags(ENV_PROJECTEDTEXTURE_VOLUMETRICS_START_ON); // GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 
 	BaseClass::Spawn();
 }
@@ -420,6 +451,9 @@ void CEnvProjectedTexture::Activate( void )
 #ifndef MAPBASE // Putting this in Activate() breaks projected textures which start off or don't start always updating in savegames. Moved to Spawn() instead
 	m_bState = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_STARTON ) != 0 );
 	m_bAlwaysUpdate = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_ALWAYSUPDATE ) != 0 );
+#ifdef GSTRING_VOLUMETRICS
+	m_bEnableVolumetrics = HasSpawnFlags(ENV_PROJECTEDTEXTURE_VOLUMETRICS_START_ON); // GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 #endif
 
 	SetThink( &CEnvProjectedTexture::InitialThink );
@@ -470,6 +504,9 @@ int CEnvProjectedTexture::UpdateTransmitState()
 #define ENV_PROJECTEDTEXTURE_STARTON			(1<<0)
 #ifdef MAPBASE
 #define ENV_PROJECTEDTEXTURE_ALWAYSUPDATE		(1<<1)
+#ifdef GSTRING_VOLUMETRICS
+#define ENV_PROJECTEDTEXTURE_VOLUMETRICS_START_ON	(1<<2)
+#endif // GSTRING_VOLUMETRICS
 #endif
 
 //-----------------------------------------------------------------------------
@@ -509,6 +546,10 @@ public:
 	void InputSetSpotlightTexture( inputdata_t &inputdata );
 	void InputSetAmbient( inputdata_t &inputdata );
 
+#ifdef GSTRING_VOLUMETRICS
+	void InputSetEnableVolumetrics(inputdata_t& inputdata);
+#endif // GSTRING_VOLUMETRICS
+
 	void InitialThink( void );
 
 	CNetworkHandle( CBaseEntity, m_hTargetEntity );
@@ -531,6 +572,16 @@ private:
 	CNetworkVar( float, m_flNearZ );
 	CNetworkVar( float, m_flFarZ );
 	CNetworkVar( int, m_nShadowQuality );
+
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	CNetworkVar(bool, m_bEnableVolumetrics);
+	CNetworkVar(float, m_flVolumetricsFadeDistance);
+	CNetworkVar(int, m_iVolumetricsQuality);
+	CNetworkVar(float, m_flVolumetricsQualityBias);
+	CNetworkVar(float, m_flVolumetricsMultiplier);
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 };
 
 LINK_ENTITY_TO_CLASS( env_projectedtexture, CEnvProjectedTexture );
@@ -576,6 +627,18 @@ BEGIN_DATADESC( CEnvProjectedTexture )
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "Ambient", InputSetAmbient ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "SpotlightTexture", InputSetSpotlightTexture ),
 	DEFINE_THINKFUNC( InitialThink ),
+
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	DEFINE_INPUTFUNC(FIELD_BOOLEAN, "EnableVolumetrics", InputSetEnableVolumetrics),
+
+	DEFINE_FIELD(m_bEnableVolumetrics, FIELD_BOOLEAN),
+	DEFINE_KEYFIELD(m_flVolumetricsFadeDistance, FIELD_FLOAT, "volumetricsfadedistance"),
+	DEFINE_KEYFIELD(m_iVolumetricsQuality, FIELD_INTEGER, "volumetricsquality"),
+	DEFINE_KEYFIELD(m_flVolumetricsQualityBias, FIELD_FLOAT, "volumetricsqualitybias"),
+	DEFINE_KEYFIELD(m_flVolumetricsMultiplier, FIELD_FLOAT, "volumetricsmultiplier"),
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 END_DATADESC()
 
 IMPLEMENT_SERVERCLASS_ST( CEnvProjectedTexture, DT_EnvProjectedTexture )
@@ -596,6 +659,15 @@ IMPLEMENT_SERVERCLASS_ST( CEnvProjectedTexture, DT_EnvProjectedTexture )
 	SendPropFloat( SENDINFO( m_flNearZ ), 16, SPROP_ROUNDDOWN, 0.0f,  500.0f ),
 	SendPropFloat( SENDINFO( m_flFarZ ),  18, SPROP_ROUNDDOWN, 0.0f, 1500.0f ),
 	SendPropInt( SENDINFO( m_nShadowQuality ), 1, SPROP_UNSIGNED ),  // Just one bit for now
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	SendPropBool(SENDINFO(m_bEnableVolumetrics)),
+	SendPropFloat(SENDINFO(m_flVolumetricsFadeDistance)),
+	SendPropInt(SENDINFO(m_iVolumetricsQuality)),
+	SendPropFloat(SENDINFO(m_flVolumetricsQualityBias)),
+	SendPropFloat(SENDINFO(m_flVolumetricsMultiplier)),
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 END_SEND_TABLE()
 
 //-----------------------------------------------------------------------------
@@ -623,6 +695,12 @@ CEnvProjectedTexture::CEnvProjectedTexture( void )
 	m_flNearZ = 4.0f;
 	m_flFarZ = 750.0f;
 	m_nShadowQuality = 0;
+
+#ifdef GSTRING_VOLUMETRICS
+	// GSTRINGMIGRATION
+	m_flVolumetricsQualityBias = 3.0f;
+	// END GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 }
 
 void UTIL_ColorStringToLinearFloatColor( Vector &color, const char *pString )
@@ -746,6 +824,9 @@ void CEnvProjectedTexture::Activate( void )
 #ifdef MAPBASE
 	m_bAlwaysUpdate = ( ( GetSpawnFlags() & ENV_PROJECTEDTEXTURE_ALWAYSUPDATE ) != 0 );
 #endif
+#ifdef GSTRING_VOLUMETRICS
+	m_bEnableVolumetrics = HasSpawnFlags(ENV_PROJECTEDTEXTURE_VOLUMETRICS_START_ON); // GSTRINGMIGRATION
+#endif // GSTRING_VOLUMETRICS
 
 	SetThink( &CEnvProjectedTexture::InitialThink );
 	SetNextThink( gpGlobals->curtime + 0.1f );
@@ -777,6 +858,13 @@ int CEnvProjectedTexture::UpdateTransmitState()
 
 #endif
 
+#ifdef GSTRING_VOLUMETRICS
+void CEnvProjectedTexture::InputSetEnableVolumetrics(inputdata_t& inputdata)
+{
+	m_bEnableVolumetrics = inputdata.value.Bool();
+}
+#endif // GSTRING_VOLUMETRICS	
+
 
 // Console command for creating env_projectedtexture entities
 void CC_CreateFlashlight( const CCommand &args )
@@ -794,7 +882,10 @@ void CC_CreateFlashlight( const CCommand &args )
 		pFlashlight->SetName( AllocPooledString( args[1] ) );
 	}
 
-	pFlashlight->Teleport( &origin, &angles, NULL );
+	pFlashlight->Teleport(&origin, &angles, NULL);
+	variant_t var;
+	var.SetFloat(45.f);
+	pFlashlight->AcceptInput("SetFOV", pPlayer, pPlayer, var, 0);
 
 }
 static ConCommand create_flashlight("create_flashlight", CC_CreateFlashlight, 0, FCVAR_CHEAT);

@@ -12,3 +12,5 @@ fxctmp9_tmp\parallaxtest_vs30.inc
 fxctmp9_tmp\parallaxtest_ps30.inc
 fxctmp9_tmp\solidenergy_ps30.inc
 fxctmp9_tmp\solidenergy_vs30.inc
+fxctmp9_tmp\skydome_ps30.inc
+fxctmp9_tmp\skydome_vs30.inc

@@ -119,7 +119,7 @@ public:
 	void SetOriginalOwner( CBaseEntity *pEntity ) { m_hOriginalOwner = pEntity; }
 	CBaseEntity *GetOriginalOwner() { return m_hOriginalOwner; }
 
-private:
+protected:
 
 	void SetPlayerLaunched( CBasePlayer *pOwner );
 
@@ -135,20 +135,20 @@ private:
 	void SetBallAsLaunched( void );
 
 	void CollisionEventToTrace( int index, gamevcollisionevent_t *pEvent, trace_t &tr );
-	bool DissolveEntity( CBaseEntity *pEntity );
-	void OnHitEntity( CBaseEntity *pHitEntity, float flSpeed, int index, gamevcollisionevent_t *pEvent );
-	void DoImpactEffect( const Vector &preVelocity, int index, gamevcollisionevent_t *pEvent );
+	virtual bool DissolveEntity(CBaseEntity *pEntity);
+	virtual void OnHitEntity(CBaseEntity *pHitEntity, float flSpeed, int index, gamevcollisionevent_t *pEvent);
+	virtual void DoImpactEffect(const Vector &preVelocity, int index, gamevcollisionevent_t *pEvent);
 
 	// Bounce inside the spawner: 
 	void BounceInSpawner( float flSpeed, int index, gamevcollisionevent_t *pEvent );
 
-	bool IsAttractiveTarget( CBaseEntity *pEntity );
+	virtual bool IsAttractiveTarget(CBaseEntity *pEntity);
 
 	// Deflects the ball toward enemies in case of a collision 
-	void DeflectTowardEnemy( float flSpeed, int index, gamevcollisionevent_t *pEvent );
+	virtual void DeflectTowardEnemy(float flSpeed, int index, gamevcollisionevent_t *pEvent);
 
 	// Is this something we can potentially dissolve? 
-	bool IsHittableEntity( CBaseEntity *pHitEntity );
+	virtual bool IsHittableEntity(CBaseEntity *pHitEntity);
 
 	// Sucky. 
 	void WhizSoundThink();
@@ -165,7 +165,7 @@ private:
 		return ( m_nState == STATE_LAUNCHED && m_nMaxBounces != 0 && m_nBounceCount >= m_nMaxBounces );
 	}
 
-private:
+protected:
 
 	int		m_nBounceCount;
 	int		m_nMaxBounces;

@@ -185,7 +185,7 @@ void CEnvWindShared::UpdateWindSound( float flTotalWindSpeed )
 
 
 #ifdef MAPBASE
-#define TREE_SWAY_UPDATE_TIME 2.0f
+#define TREE_SWAY_UPDATE_TIME 1.5f
 
 void CEnvWindShared::UpdateTreeSway( float flTime )
 {

@@ -122,6 +122,7 @@ public:
 	virtual void		PlayerRunCommand( CUserCmd *ucmd, IMoveHelper *moveHelper);
 	virtual void		PlayerUse ( void );
 	virtual void		SuspendUse( float flDuration ) { m_flTimeUseSuspended = gpGlobals->curtime + flDuration; }
+	void	DropActiveWeapon(void);
 	virtual void		UpdateClientData( void );
 	virtual void		OnRestore();
 	virtual void		StopLoopingSounds( void );

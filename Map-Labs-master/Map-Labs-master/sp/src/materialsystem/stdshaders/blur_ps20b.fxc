@@ -1,0 +1,25 @@
+sampler2D textureSampler : register(s0);
+
+float2 pixelSize;
+
+float4 BlurPass(float2 texCoord)
+{
+    float4 color = float4(0.0, 0.0, 0.0, 0.0);
+    
+    // Apply box blur by sampling neighboring pixels
+    color += tex2D(textureSampler, texCoord + float2(-pixelSize.x, 0.0));
+    color += tex2D(textureSampler, texCoord + float2(pixelSize.x, 0.0));
+    color += tex2D(textureSampler, texCoord + float2(0.0, -pixelSize.y));
+    color += tex2D(textureSampler, texCoord + float2(0.0, pixelSize.y));
+    
+    return color / 4.0;
+}
+
+float4 main(float2 texCoord : TEXCOORD0) : COLOR
+{
+    float4 blurredColor = BlurPass(texCoord);
+    float4 originalColor = tex2D(textureSampler, texCoord);
+    
+    // Mix the blurred color with the original color
+    return lerp(blurredColor, originalColor, 0.5);
+}

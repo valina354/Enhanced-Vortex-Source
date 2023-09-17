@@ -19,7 +19,7 @@ class CRagdollExplosionEnumerator : public IPartitionEnumerator
 	DECLARE_CLASS_GAMEROOT( CRagdollExplosionEnumerator, IPartitionEnumerator );
 public:
 	//Forced constructor
-	CRagdollExplosionEnumerator( Vector origin, float radius, float magnitude );
+	CRagdollExplosionEnumerator(Vector origin, float radius, float magnitude);
 	~CRagdollExplosionEnumerator();
 
 	//Actual work code

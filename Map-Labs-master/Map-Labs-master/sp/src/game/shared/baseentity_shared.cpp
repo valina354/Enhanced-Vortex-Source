@@ -1647,6 +1647,10 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	{
 		CBasePlayer *pPlayer = dynamic_cast<CBasePlayer*>(this);
 
+		CBaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
+		if (!pWeapon)
+			return;
+
 		int rumbleEffect = pPlayer->GetActiveWeapon()->GetRumbleEffect();
 
 		if( rumbleEffect != RUMBLE_INVALID )

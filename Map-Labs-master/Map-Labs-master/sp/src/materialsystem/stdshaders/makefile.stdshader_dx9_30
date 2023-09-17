@@ -1,116 +1,135 @@
-default:  fxctmp9_tmp\fxaa_ps30.inc shaders\fxc\fxaa_ps30.vcs fxctmp9_tmp\fxaa_vs30.inc shaders\fxc\fxaa_vs30.vcs fxctmp9_tmp\luma_ps30.inc shaders\fxc\luma_ps30.vcs fxctmp9_tmp\screenspace_simple_vs30.inc shaders\fxc\screenspace_simple_vs30.vcs fxctmp9_tmp\bloomflare_ps30.inc shaders\fxc\bloomflare_ps30.vcs fxctmp9_tmp\ssao_combine_vs30.inc shaders\fxc\ssao_combine_vs30.vcs fxctmp9_tmp\ssao_vs30.inc shaders\fxc\ssao_vs30.vcs fxctmp9_tmp\ssao_blur_ps30.inc shaders\fxc\ssao_blur_ps30.vcs fxctmp9_tmp\ssao_combine_ps30.inc shaders\fxc\ssao_combine_ps30.vcs fxctmp9_tmp\ssao_ps30.inc shaders\fxc\ssao_ps30.vcs fxctmp9_tmp\parallaxtest_vs30.inc shaders\fxc\parallaxtest_vs30.vcs fxctmp9_tmp\parallaxtest_ps30.inc shaders\fxc\parallaxtest_ps30.vcs fxctmp9_tmp\solidenergy_ps30.inc shaders\fxc\solidenergy_ps30.vcs fxctmp9_tmp\solidenergy_vs30.inc shaders\fxc\solidenergy_vs30.vcs
+default:  fxctmp9_tmp\fxaa_ps30.inc shaders\fxc\fxaa_ps30.vcs fxctmp9_tmp\fxaa_vs30.inc shaders\fxc\fxaa_vs30.vcs fxctmp9_tmp\luma_ps30.inc shaders\fxc\luma_ps30.vcs fxctmp9_tmp\screenspace_simple_vs30.inc shaders\fxc\screenspace_simple_vs30.vcs fxctmp9_tmp\bloomflare_ps30.inc shaders\fxc\bloomflare_ps30.vcs fxctmp9_tmp\ssao_combine_vs30.inc shaders\fxc\ssao_combine_vs30.vcs fxctmp9_tmp\ssao_vs30.inc shaders\fxc\ssao_vs30.vcs fxctmp9_tmp\ssao_blur_ps30.inc shaders\fxc\ssao_blur_ps30.vcs fxctmp9_tmp\ssao_combine_ps30.inc shaders\fxc\ssao_combine_ps30.vcs fxctmp9_tmp\ssao_ps30.inc shaders\fxc\ssao_ps30.vcs fxctmp9_tmp\parallaxtest_vs30.inc shaders\fxc\parallaxtest_vs30.vcs fxctmp9_tmp\parallaxtest_ps30.inc shaders\fxc\parallaxtest_ps30.vcs fxctmp9_tmp\solidenergy_ps30.inc shaders\fxc\solidenergy_ps30.vcs fxctmp9_tmp\solidenergy_vs30.inc shaders\fxc\solidenergy_vs30.vcs fxctmp9_tmp\skydome_ps30.inc shaders\fxc\skydome_ps30.vcs fxctmp9_tmp\skydome_vs30.inc shaders\fxc\skydome_vs30.vcs
 
-fxctmp9_tmp\fxaa_ps30.inc shaders\fxc\fxaa_ps30.vcs: fxaa_ps30.fxc common_fxc.h common_ps_fxc.h common_pragmas.h Fxaa3_11.h common_hlsl_cpp_consts.h
+fxctmp9_tmp\fxaa_ps30.inc shaders\fxc\fxaa_ps30.vcs: fxaa_ps30.fxc common_fxc.h common_pragmas.h Fxaa3_11.h common_hlsl_cpp_consts.h common_ps_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." fxaa_ps30.fxc-----fxaa_ps30
 	echo fxaa_ps30.fxc>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
-	echo common_ps_fxc.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
 	echo Fxaa3_11.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\fxaa_vs30.inc shaders\fxc\fxaa_vs30.vcs: fxaa_vs30.fxc fxaa3.h common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h common_vs_fxc.h
+fxctmp9_tmp\fxaa_vs30.inc shaders\fxc\fxaa_vs30.vcs: fxaa_vs30.fxc common_vs_fxc.h common_hlsl_cpp_consts.h fxaa3.h common_pragmas.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." fxaa_vs30.fxc-----fxaa_vs30
 	echo fxaa_vs30.fxc>> filestocopy.txt
+	echo common_vs_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo fxaa3.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
-	echo common_vs_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\luma_ps30.inc shaders\fxc\luma_ps30.vcs: luma_ps30.fxc common_hlsl_cpp_consts.h common_pragmas.h common_ps_fxc.h common_fxc.h
+fxctmp9_tmp\luma_ps30.inc shaders\fxc\luma_ps30.vcs: luma_ps30.fxc common_pragmas.h common_fxc.h common_ps_fxc.h common_hlsl_cpp_consts.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." luma_ps30.fxc-----luma_ps30
 	echo luma_ps30.fxc>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
-	echo common_ps_fxc.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 
-fxctmp9_tmp\screenspace_simple_vs30.inc shaders\fxc\screenspace_simple_vs30.vcs: screenspace_simple_vs30.fxc common_vs_fxc.h common_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
+fxctmp9_tmp\screenspace_simple_vs30.inc shaders\fxc\screenspace_simple_vs30.vcs: screenspace_simple_vs30.fxc common_hlsl_cpp_consts.h common_vs_fxc.h common_fxc.h common_pragmas.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." screenspace_simple_vs30.fxc-----screenspace_simple_vs30
 	echo screenspace_simple_vs30.fxc>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_vs_fxc.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 
-fxctmp9_tmp\bloomflare_ps30.inc shaders\fxc\bloomflare_ps30.vcs: bloomflare_ps30.fxc common_ps_fxc.h common_fxc.h common_hlsl_cpp_consts.h common_pragmas.h
+fxctmp9_tmp\bloomflare_ps30.inc shaders\fxc\bloomflare_ps30.vcs: bloomflare_ps30.fxc common_ps_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." bloomflare_ps30.fxc-----bloomflare_ps30
 	echo bloomflare_ps30.fxc>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\ssao_combine_vs30.inc shaders\fxc\ssao_combine_vs30.vcs: ssao_combine_vs30.fxc common_vs_fxc.h common_fxc.h common_hlsl_cpp_consts.h common_pragmas.h
+fxctmp9_tmp\ssao_combine_vs30.inc shaders\fxc\ssao_combine_vs30.vcs: ssao_combine_vs30.fxc common_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_vs_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ssao_combine_vs30.fxc-----ssao_combine_vs30
 	echo ssao_combine_vs30.fxc>> filestocopy.txt
-	echo common_vs_fxc.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_vs_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\ssao_vs30.inc shaders\fxc\ssao_vs30.vcs: ssao_vs30.fxc common_fxc.h common_vs_fxc.h common_hlsl_cpp_consts.h common_pragmas.h
+fxctmp9_tmp\ssao_vs30.inc shaders\fxc\ssao_vs30.vcs: ssao_vs30.fxc common_vs_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ssao_vs30.fxc-----ssao_vs30
 	echo ssao_vs30.fxc>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
 	echo common_vs_fxc.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\ssao_blur_ps30.inc shaders\fxc\ssao_blur_ps30.vcs: ssao_blur_ps30.fxc common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h common_ps_fxc.h
+fxctmp9_tmp\ssao_blur_ps30.inc shaders\fxc\ssao_blur_ps30.vcs: ssao_blur_ps30.fxc common_pragmas.h common_fxc.h common_hlsl_cpp_consts.h common_ps_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ssao_blur_ps30.fxc-----ssao_blur_ps30
 	echo ssao_blur_ps30.fxc>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\ssao_combine_ps30.inc shaders\fxc\ssao_combine_ps30.vcs: ssao_combine_ps30.fxc common_fxc.h common_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
+fxctmp9_tmp\ssao_combine_ps30.inc shaders\fxc\ssao_combine_ps30.vcs: ssao_combine_ps30.fxc common_hlsl_cpp_consts.h common_ps_fxc.h common_pragmas.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ssao_combine_ps30.fxc-----ssao_combine_ps30
 	echo ssao_combine_ps30.fxc>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\ssao_ps30.inc shaders\fxc\ssao_ps30.vcs: ssao_ps30.fxc common_fxc.h common_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
+fxctmp9_tmp\ssao_ps30.inc shaders\fxc\ssao_ps30.vcs: ssao_ps30.fxc common_hlsl_cpp_consts.h common_ps_fxc.h common_fxc.h common_pragmas.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." ssao_ps30.fxc-----ssao_ps30
 	echo ssao_ps30.fxc>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
-	echo common_ps_fxc.h>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
 
-fxctmp9_tmp\parallaxtest_vs30.inc shaders\fxc\parallaxtest_vs30.vcs: parallaxtest_vs30.fxc common_vs_fxc.h common_fxc.h common_hlsl_cpp_consts.h common_pragmas.h
+fxctmp9_tmp\parallaxtest_vs30.inc shaders\fxc\parallaxtest_vs30.vcs: parallaxtest_vs30.fxc common_vs_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." parallaxtest_vs30.fxc-----parallaxtest_vs30
 	echo parallaxtest_vs30.fxc>> filestocopy.txt
 	echo common_vs_fxc.h>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_pragmas.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 
 fxctmp9_tmp\parallaxtest_ps30.inc shaders\fxc\parallaxtest_ps30.vcs: parallaxtest_ps30.fxc 
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." parallaxtest_ps30.fxc-----parallaxtest_ps30
 	echo parallaxtest_ps30.fxc>> filestocopy.txt
 
-fxctmp9_tmp\solidenergy_ps30.inc shaders\fxc\solidenergy_ps30.vcs: solidenergy_ps20b.fxc common_vertexlitgeneric_dx9.h shader_constant_register_map.h common_fog_ps_fxc.h common_pragmas.h common_hlsl_cpp_consts.h common_fxc.h common_ps_fxc.h
+fxctmp9_tmp\solidenergy_ps30.inc shaders\fxc\solidenergy_ps30.vcs: solidenergy_ps20b.fxc common_fxc.h common_pragmas.h common_fog_ps_fxc.h common_vertexlitgeneric_dx9.h common_hlsl_cpp_consts.h shader_constant_register_map.h common_ps_fxc.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." solidenergy_ps20b.fxc-----solidenergy_ps30
 	echo solidenergy_ps20b.fxc>> filestocopy.txt
-	echo common_vertexlitgeneric_dx9.h>> filestocopy.txt
-	echo shader_constant_register_map.h>> filestocopy.txt
-	echo common_fog_ps_fxc.h>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
-	echo common_hlsl_cpp_consts.h>> filestocopy.txt
 	echo common_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_fog_ps_fxc.h>> filestocopy.txt
+	echo common_vertexlitgeneric_dx9.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo shader_constant_register_map.h>> filestocopy.txt
 	echo common_ps_fxc.h>> filestocopy.txt
 
-fxctmp9_tmp\solidenergy_vs30.inc shaders\fxc\solidenergy_vs30.vcs: solidenergy_vs20.fxc common_vs_fxc.h common_fxc.h common_fog_vs_fxc.h common_pragmas.h common_hlsl_cpp_consts.h
+fxctmp9_tmp\solidenergy_vs30.inc shaders\fxc\solidenergy_vs30.vcs: solidenergy_vs20.fxc common_vs_fxc.h common_fog_vs_fxc.h common_hlsl_cpp_consts.h common_fxc.h common_pragmas.h
 	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." solidenergy_vs20.fxc-----solidenergy_vs30
 	echo solidenergy_vs20.fxc>> filestocopy.txt
 	echo common_vs_fxc.h>> filestocopy.txt
-	echo common_fxc.h>> filestocopy.txt
 	echo common_fog_vs_fxc.h>> filestocopy.txt
-	echo common_pragmas.h>> filestocopy.txt
 	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+
+fxctmp9_tmp\skydome_ps30.inc shaders\fxc\skydome_ps30.vcs: skydome_ps30.fxc common_fxc.h common_pragmas.h common_vertexlitgeneric_dx9.h common_hlsl_cpp_consts.h common_ps_fxc.h shader_constant_register_map.h common_flashlight_fxc.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." skydome_ps30.fxc-----skydome_ps30
+	echo skydome_ps30.fxc>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_vertexlitgeneric_dx9.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_ps_fxc.h>> filestocopy.txt
+	echo shader_constant_register_map.h>> filestocopy.txt
+	echo common_flashlight_fxc.h>> filestocopy.txt
+
+fxctmp9_tmp\skydome_vs30.inc shaders\fxc\skydome_vs30.vcs: skydome_vs30.fxc common_vs_fxc.h common_hlsl_cpp_consts.h common_pragmas.h common_fxc.h
+	perl ..\..\devtools\bin\fxc_prep.pl   -source "..\.." skydome_vs30.fxc-----skydome_vs30
+	echo skydome_vs30.fxc>> filestocopy.txt
+	echo common_vs_fxc.h>> filestocopy.txt
+	echo common_hlsl_cpp_consts.h>> filestocopy.txt
+	echo common_pragmas.h>> filestocopy.txt
+	echo common_fxc.h>> filestocopy.txt
 

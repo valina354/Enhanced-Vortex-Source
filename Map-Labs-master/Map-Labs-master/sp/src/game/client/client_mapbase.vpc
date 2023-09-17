@@ -8,7 +8,7 @@ $Configuration
 {
 	$Compiler
 	{
-		$PreprocessorDefinitions		"$BASE;ASW_PROJECTED_TEXTURES;DYNAMIC_RTT_SHADOWS;GLOWS_ENABLE;GAMEPADUI"
+		$PreprocessorDefinitions		"$BASE;ASW_PROJECTED_TEXTURES;DYNAMIC_RTT_SHADOWS;GLOWS_ENABLE;GAMEPADUI;GSTRING_VOLUMETRICS"
 		
 		$PreprocessorDefinitions		"$BASE;MAPBASE_RPC;DISCORD_RPC;STEAM_RPC"	[$MAPBASE_RPC]
 		$PreprocessorDefinitions		"$BASE;MAPBASE_VSCRIPT"		[$MAPBASE_VSCRIPT]
@@ -38,6 +38,8 @@ $Project
 		$File	"convarproxy.cpp"
 		$File	"ccursorclipmanagement.cpp"
 		$File	"ccursorclipmanagement.h"
+		$File	"mapload_background.h"
+		$File	"mapload_background.cpp"
 	
 		$Folder	"Mapbase"
 		{

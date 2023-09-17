@@ -91,6 +91,9 @@
 #include "debugoverlay_shared.h"
 #include "worldlight.h"
 #endif
+#ifdef GSTRING_VOLUMETRICS
+#include "view.h"
+#endif // GSTRING_VOLUMETRICS
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -113,7 +116,7 @@ ConVar r_flashlightdepthtexture( "r_flashlightdepthtexture", "0" );
 ConVar r_flashlightdepthres( "r_flashlightdepthres", "512" );
 #else
 #ifdef MAPBASE
-ConVar r_flashlightdepthres( "r_flashlightdepthres", "2048" );
+ConVar r_flashlightdepthres( "r_flashlightdepthres", "5596" );
 #else
 ConVar r_flashlightdepthres( "r_flashlightdepthres", "1024" );
 #endif
@@ -130,12 +133,19 @@ ConVarRef mat_slopescaledepthbias_shadowmap( "mat_slopescaledepthbias_shadowmap"
 ConVarRef mat_depthbias_shadowmap( "mat_depthbias_shadowmap" );
 #endif
 
+#ifdef GSTRING_VOLUMETRICS
+ConVar r_flashlightvolumetrics("r_flashlightvolumetrics", "1", FCVAR_ARCHIVE);
+
+class CVolumetricLightRenderable;
+#endif // GSTRING_VOLUMETRICS
+
 #ifdef _WIN32
 #pragma warning( disable: 4701 )
 #endif
 
 // forward declarations
 void ToolFramework_RecordMaterialParams( IMaterial *pMaterial );
+bool IsMainView(view_id_t id);
 
 
 //-----------------------------------------------------------------------------
@@ -834,6 +844,11 @@ public:
 	bool IsShadowingFromWorldLights() const { return m_bShadowFromWorldLights && !m_bSuppressShadowFromWorldLights; }
 #endif
 
+#ifdef GSTRING_VOLUMETRICS
+	virtual bool VolumetricsAvailable();
+	virtual void UpdateFlashlightVolumetrics(ClientShadowHandle_t shadowHandle, const VolumetricState_t& lightState);
+#endif // GSTRING_VOLUMETRICS
+
 private:
 	enum
 	{
@@ -1055,6 +1070,11 @@ private:
 	bool m_bSuppressShadowFromWorldLights;
 #endif
 
+#ifdef GSTRING_VOLUMETRICS
+	CUtlMap<ClientShadowHandle_t, CVolumetricLightRenderable*> m_Volumetrics;
+	friend class CVolumetricLightRenderable;
+#endif // GSTRING_VOLUMETRICS
+
 	friend class CVisibleShadowList;
 	friend class CVisibleShadowFrustumList;
 };
@@ -1254,6 +1274,552 @@ int CVisibleShadowList::FindShadows( const CViewSetup *pView, int nLeafCount, Le
 	return nCount;
 }
 
+#ifdef GSTRING_VOLUMETRICS
+//ConVar volum_subdiv_scale("gstring_volumetrics_subdiv_scale", "0.1");
+//ConVar volum_subdiv_base("gstring_volumetrics_subdiv_base", "10");
+//ConVar volum_subdiv_sqrroot("gstring_volumetrics_subdiv_sqrroot", "0");
+
+//-----------------------------------------------------------------------------
+// Renderable for volumetric light effects
+//-----------------------------------------------------------------------------
+class CVolumetricLightRenderable : public CDefaultClientRenderable
+{
+public:
+	static CMaterialReference sm_LightShaftsMaterial;
+
+	CVolumetricLightRenderable(ClientShadowHandle_t shadow);
+	~CVolumetricLightRenderable();
+
+	virtual const Vector& GetRenderOrigin(void) { return m_vecRenderPos; }
+	virtual const QAngle& GetRenderAngles(void) { return m_angRender; }
+	virtual const matrix3x4_t& RenderableToWorldTransform() { return m_matLocalToWorld; }
+	virtual bool					ShouldDraw(void) { return s_ClientShadowMgr.VolumetricsAvailable(); }
+	virtual bool					IsTransparent(void) { return true; }
+	virtual bool					UsesFullFrameBufferTexture(void) { return true; }
+
+	// Returns the bounds relative to the origin (render bounds)
+	virtual void	GetRenderBounds(Vector& mins, Vector& maxs)
+	{
+		mins = m_vecLocalMins;
+		maxs = m_vecLocalMaxs;
+	}
+
+	virtual void	GetRenderBoundsWorldspace(Vector& absMins, Vector& absMaxs)
+	{
+		s_ClientShadowMgr.GetFrustumExtents(m_hShadow, absMins, absMaxs);
+	}
+
+	virtual int		DrawModel(int flags);
+
+	void ClearVolumetricsMesh();
+	void UpdatePosition(const FlashlightState_t& light);
+	void UpdateState(const VolumetricState_t& state);
+
+	static void ConVarSubdivChanged(IConVar* var, const char* pOldValue, float flOldValue);
+private:
+	void RebuildVolumetricMesh();
+	void GetShadowViewSetup(CViewSetup& setup, const FlashlightState_t& light);
+
+	ClientShadowHandle_t m_hShadow;
+	IMesh* m_pVolmetricMesh;
+	int m_iCurrentVolumetricsSubDiv;
+
+	Vector m_vecRenderPos;
+	QAngle m_angRender;
+	matrix3x4_t m_matLocalToWorld;
+	Vector m_vecLocalMins;
+	Vector m_vecLocalMaxs;
+
+	VolumetricState_t m_State;
+};
+
+CMaterialReference CVolumetricLightRenderable::sm_LightShaftsMaterial;
+
+static ConVar gstring_volumetrics_subdiv("gstring_volumetrics_subdiv", "0", 0, "", CVolumetricLightRenderable::ConVarSubdivChanged);
+
+void CVolumetricLightRenderable::ConVarSubdivChanged(IConVar* var, const char* pOldValue, float flOldValue)
+{
+	for (auto i = s_ClientShadowMgr.m_Volumetrics.FirstInorder(); s_ClientShadowMgr.m_Volumetrics.IsValidIndex(i); i = s_ClientShadowMgr.m_Volumetrics.NextInorder(i))
+	{
+		s_ClientShadowMgr.m_Volumetrics[i]->ClearVolumetricsMesh();
+	}
+}
+
+CVolumetricLightRenderable::CVolumetricLightRenderable(ClientShadowHandle_t shadow) : CDefaultClientRenderable()
+{
+	m_hShadow = shadow;
+	m_pVolmetricMesh = nullptr;
+
+	ClientLeafSystem()->AddRenderable(this, RENDER_GROUP_TRANSLUCENT_ENTITY);
+	//ClientLeafSystem()->EnableAlternateSorting(m_hRenderHandle, true);
+}
+
+CVolumetricLightRenderable::~CVolumetricLightRenderable()
+{
+	ClientLeafSystem()->RemoveRenderable(m_hRenderHandle);
+	ClearVolumetricsMesh();
+}
+
+void CVolumetricLightRenderable::UpdatePosition(const FlashlightState_t& light)
+{
+	QuaternionMatrix(light.m_quatOrientation, light.m_vecLightOrigin, m_matLocalToWorld);
+	MatrixAngles(m_matLocalToWorld, m_angRender, m_vecRenderPos);
+
+	VMatrix matProjection;
+	MatrixMultiply(s_ClientShadowMgr.m_Shadows[m_hShadow].m_WorldToShadow, m_matLocalToWorld, matProjection);
+	CalculateAABBFromProjectionMatrixInverse(matProjection, &m_vecLocalMins, &m_vecLocalMaxs);
+
+	ClientLeafSystem()->RenderableChanged(m_hRenderHandle);
+}
+
+void CVolumetricLightRenderable::UpdateState(const VolumetricState_t& state)
+{
+	if (m_State.m_flVolumetricsQualityBias != state.m_flVolumetricsQualityBias ||
+		m_State.m_iVolumetricsQuality != state.m_iVolumetricsQuality)
+	{
+		ClearVolumetricsMesh();
+	}
+
+	m_State = state;
+}
+
+void CVolumetricLightRenderable::GetShadowViewSetup(CViewSetup& shadowView, const FlashlightState_t& light)
+{
+#ifndef MAPBASE
+	shadowView.m_flAspectRatio = 1.0f;
+#endif
+	shadowView.x = shadowView.y = 0;
+	shadowView.width = light.m_pSpotlightTexture ? light.m_pSpotlightTexture->GetActualWidth() : 512;
+	shadowView.height = light.m_pSpotlightTexture ? light.m_pSpotlightTexture->GetActualHeight() : 512;
+#ifndef ASW_PROJECTED_TEXTURES
+	shadowView.m_bOrtho = false;
+	shadowView.m_bDoBloomAndToneMapping = false;
+#ifdef MAPBASE
+	shadowView.m_flAspectRatio = (light.m_fHorizontalFOVDegrees / light.m_fVerticalFOVDegrees);
+#endif // MAPBASE
+#endif
+
+	// Copy flashlight parameters
+#ifdef ASW_PROJECTED_TEXTURES
+	if (!light.m_bOrtho)
+	{
+		shadowView.m_bOrtho = false;
+
+#ifdef MAPBASE
+		shadowView.m_flAspectRatio = (light.m_fHorizontalFOVDegrees / light.m_fVerticalFOVDegrees);
+#endif // MAPBASE
+	}
+	else
+	{
+		shadowView.m_bOrtho = true;
+		shadowView.m_OrthoLeft = light.m_fOrthoLeft;
+		shadowView.m_OrthoTop = light.m_fOrthoTop;
+		shadowView.m_OrthoRight = light.m_fOrthoRight;
+		shadowView.m_OrthoBottom = light.m_fOrthoBottom;
+
+#ifdef MAPBASE
+		shadowView.m_flAspectRatio = 1.0f;
+#endif
+	}
+
+	shadowView.m_bDoBloomAndToneMapping = false;
+#else
+	const FlashlightState_t& flashlightState = shadowmgr->GetFlashlightState(shadow.m_ShadowHandle);
+#endif
+	shadowView.fov = shadowView.fovViewmodel = light.m_fHorizontalFOVDegrees;
+	shadowView.origin = light.m_vecLightOrigin;
+	QuaternionAngles(light.m_quatOrientation, shadowView.angles); // Convert from Quaternion to QAngle
+
+	shadowView.zNear = shadowView.zNearViewmodel = light.m_NearZ;
+	shadowView.zFar = shadowView.zFarViewmodel = light.m_FarZ;
+}
+
+void CVolumetricLightRenderable::ClearVolumetricsMesh()
+{
+	if (m_pVolmetricMesh != NULL)
+	{
+		CMatRenderContextPtr pRenderContext(materials);
+		pRenderContext->DestroyStaticMesh(m_pVolmetricMesh);
+		m_pVolmetricMesh = NULL;
+	}
+}
+
+void CVolumetricLightRenderable::RebuildVolumetricMesh()
+{
+	ClearVolumetricsMesh();
+
+	auto& shadow = s_ClientShadowMgr.m_Shadows[m_hShadow];
+	const FlashlightState_t& light = shadowmgr->GetFlashlightState(shadow.m_ShadowHandle);
+
+	CViewSetup setup;
+	GetShadowViewSetup(setup, light);
+	setup.origin = vec3_origin;
+	setup.angles = vec3_angle;
+
+	VMatrix world2View, view2Proj, world2Proj, world2Pixels;
+	render->GetMatricesForView(setup, &world2View, &view2Proj, &world2Proj, &world2Pixels);
+	VMatrix proj2world;
+	MatrixInverseGeneral(world2Proj, proj2world);
+
+	Vector nearPlane[4];
+	Vector farPlane[4];
+	Vector3DMultiplyPositionProjective(proj2world, Vector(-1, -1, 1), farPlane[0]);
+	Vector3DMultiplyPositionProjective(proj2world, Vector(1, -1, 1), farPlane[1]);
+	Vector3DMultiplyPositionProjective(proj2world, Vector(1, 1, 1), farPlane[2]);
+	Vector3DMultiplyPositionProjective(proj2world, Vector(-1, 1, 1), farPlane[3]);
+
+	Vector3DMultiplyPositionProjective(proj2world, Vector(-1, -1, 0), nearPlane[0]);
+	Vector3DMultiplyPositionProjective(proj2world, Vector(1, -1, 0), nearPlane[1]);
+	Vector3DMultiplyPositionProjective(proj2world, Vector(1, 1, 0), nearPlane[2]);
+	Vector3DMultiplyPositionProjective(proj2world, Vector(-1, 1, 0), nearPlane[3]);
+
+	/*DebugDrawLine( farPlane[ 0 ], farPlane[ 1 ], 0, 0, 255, true, 10 );
+	DebugDrawLine( farPlane[ 1 ], farPlane[ 2 ], 0, 0, 255, true, 10);
+	DebugDrawLine( farPlane[ 2 ], farPlane[ 3 ], 0, 0, 255, true, 10);
+	DebugDrawLine( farPlane[ 3 ], farPlane[ 0 ], 0, 0, 255, true, 10);
+	DebugDrawLine( nearPlane[ 0 ], nearPlane[ 1 ], 0, 0, 255, true, 10);
+	DebugDrawLine( nearPlane[ 1 ], nearPlane[ 2 ], 0, 0, 255, true, 10);
+	DebugDrawLine( nearPlane[ 2 ], nearPlane[ 3 ], 0, 0, 255, true, 10);
+	DebugDrawLine( nearPlane[ 3 ], nearPlane[ 0 ], 0, 0, 255, true, 10);
+	DebugDrawLine( farPlane[ 0 ], nearPlane[ 0 ], 0, 0, 255, true, 10);
+	DebugDrawLine( farPlane[ 1 ], nearPlane[ 1 ], 0, 0, 255, true, 10);
+	DebugDrawLine( farPlane[ 2 ], nearPlane[ 2 ], 0, 0, 255, true, 10);
+	DebugDrawLine( farPlane[ 3 ], nearPlane[ 3 ], 0, 0, 255, true, 10);*/
+
+	const int iCvarSubDiv = gstring_volumetrics_subdiv.GetInt();
+	m_iCurrentVolumetricsSubDiv = (iCvarSubDiv > 2) ? iCvarSubDiv : Max(m_State.m_iVolumetricsQuality, 3);
+
+	CMatRenderContextPtr pRenderContext(materials);
+
+#ifdef ASW_PROJECTED_TEXTURES
+	if (light.m_bOrtho)
+	{
+		const Vector vecDirections[3] = {
+			(farPlane[0] - nearPlane[0]),
+			(farPlane[1] - farPlane[0]),
+			(farPlane[3] - farPlane[0]),
+		};
+
+		const VertexFormat_t vertexFormat = VERTEX_POSITION | VERTEX_COLOR | VERTEX_TEXCOORD_SIZE(0, 2);
+		m_pVolmetricMesh = pRenderContext->CreateStaticMesh(vertexFormat, TEXTURE_GROUP_OTHER, sm_LightShaftsMaterial);
+
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin(m_pVolmetricMesh, MATERIAL_QUADS, m_iCurrentVolumetricsSubDiv * 4 - 3);
+
+		for (int x = 1; x < m_iCurrentVolumetricsSubDiv * 2; x++)
+		{
+			// never 0.0 or 1.0
+			float flFracX = x / float(m_iCurrentVolumetricsSubDiv * 2);
+			//flFracX = powf( flFracX, 3.0f );
+			//flFracX = powf(flFracX, light.m_flVolumetricsQualityBias);
+
+			Vector v00 = nearPlane[0] + vecDirections[0] * flFracX;
+			Vector v10 = v00 + vecDirections[1];
+			Vector v11 = v10 + vecDirections[2];
+			Vector v01 = v00 + vecDirections[2];
+
+			meshBuilder.Position3f(XYZ(v00));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v10));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v11));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v01));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+		}
+
+		for (int x = 1; x < m_iCurrentVolumetricsSubDiv; x++)
+		{
+			// never 0.0 or 1.0
+			const float flFracX = x / float(m_iCurrentVolumetricsSubDiv);
+			Vector v00 = nearPlane[0] + vecDirections[1] * flFracX;
+			Vector v01 = v00 + vecDirections[2];
+			Vector v10 = farPlane[0] + vecDirections[1] * flFracX;
+			Vector v11 = v10 + vecDirections[2];
+
+			meshBuilder.Position3f(XYZ(v00));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v01));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v11));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v10));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+		}
+
+		for (int x = 1; x < m_iCurrentVolumetricsSubDiv; x++)
+		{
+			// never 0.0 or 1.0
+			const float flFracX = x / float(m_iCurrentVolumetricsSubDiv);
+			Vector v00 = nearPlane[0] + vecDirections[2] * flFracX;
+			Vector v01 = v00 + vecDirections[1];
+			Vector v10 = farPlane[0] + vecDirections[2] * flFracX;
+			Vector v11 = v10 + vecDirections[1];
+
+			meshBuilder.Position3f(XYZ(v00));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v01));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v11));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v10));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+		}
+
+		meshBuilder.End();
+	}
+	else
+#endif // ASW_PROJECTED_TEXTURES
+	{
+		const Vector vecDirections[3] = {
+			(farPlane[0] - vec3_origin),
+			(farPlane[1] - farPlane[0]),
+			(farPlane[3] - farPlane[0]),
+		};
+
+		Vector vColorScale(1.f / m_iCurrentVolumetricsSubDiv);
+		/*if (volum_subdiv_scale.GetFloat() > 0.f)
+		{
+		float flDivisor = Max(1.f, (m_iCurrentVolumetricsSubDiv - volum_subdiv_base.GetFloat()) * volum_subdiv_scale.GetFloat());
+		if (volum_subdiv_sqrroot.GetBool())
+		flDivisor = FastSqrt(flDivisor);
+
+		vColorScale *= 1.f / flDivisor;
+		}*/
+
+		const VertexFormat_t vertexFormat = VERTEX_POSITION | VERTEX_COLOR | VERTEX_TEXCOORD_SIZE(0, 2);
+		m_pVolmetricMesh = pRenderContext->CreateStaticMesh(vertexFormat, TEXTURE_GROUP_OTHER, sm_LightShaftsMaterial);
+
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin(m_pVolmetricMesh, MATERIAL_TRIANGLES, m_iCurrentVolumetricsSubDiv * 6 - 4);
+
+		for (int x = 1; x < m_iCurrentVolumetricsSubDiv * 2; x++)
+		{
+			// never 0.0 or 1.0
+			float flFracX = x / float(m_iCurrentVolumetricsSubDiv * 2);
+			//flFracX = powf( flFracX, 3.0f );
+			flFracX = powf(flFracX, m_State.m_flVolumetricsQualityBias);
+
+			Vector vertColor = Lerp(flFracX, vColorScale, Vector(1));
+
+			Vector v00 = vec3_origin + vecDirections[0] * flFracX;
+			Vector v10 = v00 + vecDirections[1] * flFracX;
+			Vector v11 = v10 + vecDirections[2] * flFracX;
+			Vector v01 = v00 + vecDirections[2] * flFracX;
+
+			meshBuilder.Position3f(XYZ(v00));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vertColor));
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v10));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vertColor));
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v11));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vertColor));
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v00));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vertColor));
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v11));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vertColor));
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v01));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vertColor));
+			meshBuilder.AdvanceVertex();
+		}
+
+		for (int x = 1; x < m_iCurrentVolumetricsSubDiv; x++)
+		{
+			// never 0.0 or 1.0
+			const float flFracX = x / float(m_iCurrentVolumetricsSubDiv);
+			Vector v0 = vec3_origin + vecDirections[0] + vecDirections[1] * flFracX;
+			Vector v1 = v0 + vecDirections[2];
+
+			meshBuilder.Position3f(XYZ(vec3_origin));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vColorScale));
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v0));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v1));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+		}
+
+		for (int x = 1; x < m_iCurrentVolumetricsSubDiv; x++)
+		{
+			// never 0.0 or 1.0
+			const float flFracX = x / float(m_iCurrentVolumetricsSubDiv);
+			Vector v0 = vec3_origin + vecDirections[0] + vecDirections[2] * flFracX;
+			Vector v1 = v0 + vecDirections[1];
+
+			meshBuilder.Position3f(XYZ(vec3_origin));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3f(XYZ(vColorScale));
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v0));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+
+			meshBuilder.Position3f(XYZ(v1));
+			meshBuilder.TexCoord2f(0, 0.0f, 0.0f);
+			meshBuilder.Color3ub(255, 255, 255);
+			meshBuilder.AdvanceVertex();
+		}
+
+		meshBuilder.End();
+	}
+}
+
+int CVolumetricLightRenderable::DrawModel(int flags)
+{
+	if (!m_State.m_bEnableVolumetrics ||
+		(!IsMainView(CurrentViewID()) && CurrentViewID() != VIEW_INTRO_CAMERA && CurrentViewID() != VIEW_INTRO_PLAYER)
+		)
+	{
+		return 0;
+	}
+
+	auto& shadow = s_ClientShadowMgr.m_Shadows[m_hShadow];
+	FlashlightState_t light = shadowmgr->GetFlashlightState(shadow.m_ShadowHandle);
+
+	if (!shadow.m_ShadowDepthTexture.IsValid())
+	{
+		return 0;
+	}
+
+	float flDistanceFade = 1.0f;
+	if (m_State.m_flVolumetricsFadeDistance > 0.0f)
+	{
+		Vector delta = CurrentViewOrigin() - GetRenderOrigin();
+		flDistanceFade = RemapValClamped(delta.Length(),
+			m_State.m_flVolumetricsFadeDistance + 128.f,
+			m_State.m_flVolumetricsFadeDistance, 0.0f, 1.0f);
+	}
+
+	if (flDistanceFade <= 0.0f)
+	{
+		return 0;
+	}
+
+	if (m_pVolmetricMesh == NULL)
+	{
+		RebuildVolumetricMesh();
+	}
+
+	float flColorScale = m_State.m_flVolumetricsMultiplier;
+	/*if (!light.m_bOrtho && volum_subdiv_scale.GetFloat() > 0.f)
+	{
+	float flDivisor = Max(1.f, (m_iCurrentVolumetricsSubDiv - volum_subdiv_base.GetFloat()) * volum_subdiv_scale.GetFloat());
+	if (volum_subdiv_sqrroot.GetBool())
+	flDivisor = FastSqrt(flDivisor);
+
+	flColorScale *= 1.f / flDivisor;
+	}*/
+
+	light.m_Color[0] *= flColorScale;
+	light.m_Color[1] *= flColorScale;
+	light.m_Color[2] *= flColorScale;
+	light.m_Color[3] = flDistanceFade;
+
+	CMatRenderContextPtr pRenderContext(materials);
+	pRenderContext->SetFlashlightMode(true);
+	pRenderContext->SetFlashlightStateEx(light, shadow.m_WorldToShadow, shadow.m_ShadowDepthTexture);
+
+	pRenderContext->MatrixMode(MATERIAL_MODEL);
+	pRenderContext->PushMatrix();
+	pRenderContext->LoadMatrix(m_matLocalToWorld);
+
+	pRenderContext->Bind(sm_LightShaftsMaterial, static_cast<IClientRenderable*>(this));
+	m_pVolmetricMesh->Draw();
+
+	pRenderContext->MatrixMode(MATERIAL_MODEL);
+	pRenderContext->PopMatrix();
+	pRenderContext->SetFlashlightMode(false);
+	return 1;
+}
+
+bool CClientShadowMgr::VolumetricsAvailable()
+{
+	if (!g_pMaterialSystemHardwareConfig->SupportsPixelShaders_2_b())
+		return false;
+
+	if (!m_bDepthTextureActive)
+		return false;
+
+	return r_flashlightvolumetrics.GetBool();
+}
+
+void CClientShadowMgr::UpdateFlashlightVolumetrics(ClientShadowHandle_t shadowHandle, const VolumetricState_t& lightState)
+{
+	const bool bWantsEffect = VolumetricsAvailable() && lightState.m_bEnableVolumetrics;
+
+	unsigned short sVolum = m_Volumetrics.Find(shadowHandle);
+	if (m_Volumetrics.IsValidIndex(sVolum) && !bWantsEffect)
+	{
+		delete m_Volumetrics[sVolum];
+		m_Volumetrics.RemoveAt(sVolum);
+	}
+	else if (bWantsEffect)
+	{
+		if (!m_Volumetrics.IsValidIndex(sVolum))
+			sVolum = m_Volumetrics.Insert(shadowHandle, new CVolumetricLightRenderable(shadowHandle));
+
+		m_Volumetrics[sVolum]->UpdateState(lightState);
+	}
+}
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Constructor
@@ -1268,6 +1834,9 @@ CClientShadowMgr::CClientShadowMgr() :
 	m_bShadowFromWorldLights( false ),
 	m_bSuppressShadowFromWorldLights( false ),
 #endif
+#ifdef GSTRING_VOLUMETRICS
+	m_Volumetrics(0, 0, ShadowHandleCompareFunc),
+#endif // GSTRING_VOLUMETRICS
 	m_bDepthTextureActive( false )
 {
 	m_nDepthTextureResolution = r_flashlightdepthres.GetInt();
@@ -1434,9 +2003,13 @@ bool CClientShadowMgr::Init()
 	mat_slopescaledepthbias_shadowmap = ConVarRef( "mat_slopescaledepthbias_shadowmap" );
 	mat_depthbias_shadowmap = ConVarRef( "mat_depthbias_shadowmap" );
 
-	mat_slopescaledepthbias_shadowmap.SetValue( "16" ); // Would do something like 2 here, but it causes citizens to look weird under flashlights
+	mat_slopescaledepthbias_shadowmap.SetValue( "1" ); // Would do something like 2 here, but it causes citizens to look weird under flashlights
 	mat_depthbias_shadowmap.SetValue( "0.00005" );
 #endif
+
+#ifdef GSTRING_VOLUMETRICS
+	CVolumetricLightRenderable::sm_LightShaftsMaterial.Init("engine/light_volumetrics", TEXTURE_GROUP_OTHER, true);
+#endif // GSTRING_VOLUMETRICS
 
 	return true;
 }
@@ -1448,6 +2021,11 @@ void CClientShadowMgr::Shutdown()
 	ShutdownRenderToTextureShadows();
 
 	ShutdownDepthTextureShadows();
+
+#ifdef GSTRING_VOLUMETRICS
+	m_Volumetrics.PurgeAndDeleteElements();
+	CVolumetricLightRenderable::sm_LightShaftsMaterial.Shutdown();
+#endif // GSTRING_VOLUMETRICS
 
 	materials->RemoveRestoreFunc( ShadowRestoreFunc );
 }
@@ -2255,6 +2833,35 @@ ClientShadowHandle_t CClientShadowMgr::CreateShadow( ClientEntityHandle_t entity
 	return shadowHandle;
 }
 
+#ifdef GSTRING_VOLUMETRICS
+bool StatesHaveDifferentSize(const FlashlightState_t& state1, const FlashlightState_t& state2)
+{
+	if (state1.m_bOrtho != state2.m_bOrtho)
+		return true;
+
+	if (state1.m_NearZ != state2.m_NearZ ||
+		state1.m_FarZ != state2.m_FarZ)
+		return true;
+
+	if (state2.m_bOrtho)
+	{
+		if (state1.m_fOrthoLeft != state2.m_fOrthoLeft ||
+			state1.m_fOrthoRight != state2.m_fOrthoRight ||
+			state1.m_fOrthoTop != state2.m_fOrthoTop ||
+			state1.m_fOrthoBottom != state2.m_fOrthoBottom)
+			return true;
+	}
+	else
+	{
+		if (state1.m_fHorizontalFOVDegrees != state2.m_fHorizontalFOVDegrees ||
+			state1.m_fVerticalFOVDegrees != state2.m_fVerticalFOVDegrees)
+			return true;
+	}
+
+	return false;
+}
+#endif // GSTRING_VOLUMETRICS
+
 
 //-----------------------------------------------------------------------------
 // Updates the flashlight direction and re-computes surfaces it should lie on
@@ -2284,12 +2891,33 @@ void CClientShadowMgr::UpdateFlashlightState( ClientShadowHandle_t shadowHandle,
 #else
 	BuildPerspectiveWorldToFlashlightMatrix( m_Shadows[shadowHandle].m_WorldToShadow, flashlightState );
 #endif
+
+#ifdef GSTRING_VOLUMETRICS
+	unsigned short sVolum = m_Volumetrics.Find(shadowHandle);
+	if (m_Volumetrics.IsValidIndex(sVolum))
+	{
+		const FlashlightState_t& OldState = shadowmgr->GetFlashlightState(m_Shadows[shadowHandle].m_ShadowHandle);
+
+		if (StatesHaveDifferentSize(OldState, flashlightState))
+			m_Volumetrics[sVolum]->ClearVolumetricsMesh();
+
+		m_Volumetrics[sVolum]->UpdatePosition(flashlightState);
+	}
+#endif // GSTRING_VOLUMETRICS
 											
 	shadowmgr->UpdateFlashlightState( m_Shadows[shadowHandle].m_ShadowHandle, flashlightState );
 }
 
 void CClientShadowMgr::DestroyFlashlight( ClientShadowHandle_t shadowHandle )
 {
+#ifdef GSTRING_VOLUMETRICS
+	unsigned short sIDX = m_Volumetrics.Find(shadowHandle);
+	if (m_Volumetrics.IsValidIndex(sIDX))
+	{
+		delete m_Volumetrics[sIDX];
+		m_Volumetrics.RemoveAt(sIDX);
+	}
+#endif // GSTRING_VOLUMETRICS
 	DestroyShadow( shadowHandle );
 }
 
@@ -4431,7 +5059,7 @@ void CClientShadowMgr::SetViewFlashlightState( int nActiveFlashlightCount, Clien
 	}
 }
 
-#ifdef ASW_PROJECTED_TEXTURES
+#if defined(ASW_PROJECTED_TEXTURES) || defined(GSTRING_VOLUMETRICS)
 void AddPointToExtentsHelper( const VMatrix &flashlightToWorld, const Vector &vecPos, Vector &vecMin, Vector &vecMax )
 {
 	Vector worldSpacePos;
@@ -4520,6 +5148,7 @@ void CClientShadowMgr::ComputeShadowDepthTextures( const CViewSetup &viewSetup )
 				pRenderContext->SetIntRenderingParameter( INT_FLASHLIGHT_DEPTHTEXTURE_FALLBACK_FIRST + j, 0 );
 			}
 #endif
+			shadow.m_ShadowDepthTexture.Shutdown();
 			continue;
 		}
 
@@ -4600,6 +5229,7 @@ void CClientShadowMgr::ComputeShadowDepthTextures( const CViewSetup &viewSetup )
 
 		// Associate the shadow depth texture and stencil bit with the flashlight for use during scene rendering
 		shadowmgr->SetFlashlightDepthTexture( shadow.m_ShadowHandle, shadowDepthTexture, 0 );
+		shadow.m_ShadowDepthTexture = shadowDepthTexture;
 	}
 
 	SetViewFlashlightState( nActiveDepthShadowCount, pActiveDepthShadows );
@@ -4756,6 +5386,19 @@ void CClientShadowMgr::UnlockAllShadowDepthTextures()
 		m_DepthTextureCacheLocks[i] = false;
 	}
 	SetViewFlashlightState( 0, NULL );
+
+#ifdef MAPBASE
+	for (ClientShadowHandle_t i = m_Shadows.Head(); i != m_Shadows.InvalidIndex(); i = m_Shadows.Next(i))
+	{
+		ClientShadow_t& shadow = m_Shadows[i];
+
+		// If this is not a flashlight which should use a shadow depth texture, skip!
+		if ((shadow.m_Flags & SHADOW_FLAGS_USE_DEPTH_TEXTURE) == 0)
+			continue;
+
+		shadow.m_ShadowDepthTexture.Shutdown();
+	}
+#endif // MAPBASE
 }
 
 void CClientShadowMgr::SetFlashlightTarget( ClientShadowHandle_t shadowHandle, EHANDLE targetEntity )

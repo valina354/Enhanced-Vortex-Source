@@ -31,7 +31,7 @@ ConVar csm_color_b("csm_color_b", "255");
 ConVar csm_color_a("csm_color_a", "255");
 
 
-ConVar csm_filter("csm_filter", "1");
+ConVar csm_filter("csm_filter", "0.3");
 ConVar csm_enable("csm_enable", "1");
 
 //-----------------------------------------------------------------------------

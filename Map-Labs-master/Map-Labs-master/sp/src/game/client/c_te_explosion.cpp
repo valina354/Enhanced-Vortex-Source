@@ -22,7 +22,7 @@
 
 
 // Enumator class for ragdolls being affected by explosive forces
-CRagdollExplosionEnumerator::CRagdollExplosionEnumerator( Vector origin, float radius, float magnitude )
+CRagdollExplosionEnumerator::CRagdollExplosionEnumerator(Vector origin, float radius, float magnitude)
 {
 	m_vecOrigin		= origin;
 	m_flMagnitude	= magnitude;

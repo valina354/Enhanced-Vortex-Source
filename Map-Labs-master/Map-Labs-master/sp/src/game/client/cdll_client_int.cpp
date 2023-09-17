@@ -87,6 +87,7 @@
 #include "ihudlcd.h"
 #include "toolframework_client.h"
 #include "hltvcamera.h"
+#include "mt19937_random.h"
 #ifdef MAPBASE
 #include "shaderapihack.h"
 #endif

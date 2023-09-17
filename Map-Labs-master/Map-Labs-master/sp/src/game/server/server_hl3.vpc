@@ -34,6 +34,24 @@ $Project
 		   $File	"$SRCDIR\game\server\vance\weapon_gauss.h"
 		}
 		
+		$Folder	"Random things"
+		{
+         $File   "$SRCDIR\game\shared\mt19937_random.h"
+         $File   "$SRCDIR\game\shared\mt19937_random.cpp"
+		}
+		
+		//TE120--
+			$Folder "TE120"
+			{
+				$File	"te120\ai_striderfinale.cpp"
+				$File	"te120\ai_striderfinale.h"
+				$File	"te120\prop_gravity_ball.cpp"
+				$File	"te120\prop_gravity_ball.h"
+				$File	"te120\weapon_physconcussion.cpp"
+				$File	"te120\weapon_physconcussion.h"
+			}
+//TE120--
+		
 		
 		$Folder	"Episode3"
 		{

@@ -600,6 +600,7 @@ void C_PhysPropClientside::ImpactTrace( trace_t *pTrace, int iDamageType, const 
 	OnTakeDamage( iDamage );
 }
 
+
 const char *C_PhysPropClientside::ParseEntity( const char *pEntData )
 {
 	CEntityMapData entData( (char*)pEntData );
