@@ -1,0 +1,88 @@
+// STATIC: "CONVERT_TO_SRGB"			"0..1"	[ps20b][= g_pHardwareConfig->NeedsShaderSRGBConversion()] [PC]
+// STATIC: "CONVERT_TO_SRGB"			"0..0"	[= 0] [XBOX]
+// STATIC: "USES_TEXTURE_BLENDS"		"0..1"
+// STATIC: "HAS_BLEND1"					"0..1"
+// STATIC: "HAS_BLEND2"					"0..1"
+// STATIC: "HAS_BLEND3"					"0..1"
+// STATIC: "HAS_BLEND4"					"0..1"
+// DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"	"0..1"	[ps20b] [PC]
+// DYNAMIC: "WRITE_DEPTH_TO_DESTALPHA"	"0..0"	[ps20b] [XBOX]
+
+// SKIP: ( !$USES_TEXTURE_BLENDS ) && ( $HAS_BLEND1 )
+// SKIP: ( !$USES_TEXTURE_BLENDS ) && ( $HAS_BLEND2 )
+// SKIP: ( !$USES_TEXTURE_BLENDS ) && ( $HAS_BLEND3 )
+// SKIP: ( !$USES_TEXTURE_BLENDS ) && ( $HAS_BLEND4 )
+
+#include "common_ps_fxc.h"
+
+#if defined( SHADER_MODEL_PS_2_0 )
+#	define WRITE_DEPTH_TO_DESTALPHA 0
+#endif
+
+sampler ExposureTextureSampler0	: register( s0 );
+sampler ExposureTextureSampler1	: register( s1 );
+sampler ExposureTextureSampler2	: register( s2 );
+
+#if USES_TEXTURE_BLENDS
+const float4 g_TextureBlends	: register( c1 );
+#endif
+
+#if HAS_BLEND2
+sampler ExposureTexture2Sampler0	: register( s3 );
+sampler ExposureTexture2Sampler1	: register( s4 );
+sampler ExposureTexture2Sampler2	: register( s5 );
+#endif
+#if HAS_BLEND3
+sampler ExposureTexture3Sampler0	: register( s6 );
+sampler ExposureTexture3Sampler1	: register( s7 );
+sampler ExposureTexture3Sampler2	: register( s8 );
+#endif
+#if HAS_BLEND4
+sampler ExposureTexture4Sampler0	: register( s9 );
+sampler ExposureTexture4Sampler1	: register( s10 );
+sampler ExposureTexture4Sampler2	: register( s11 );
+#endif
+
+struct PS_INPUT
+{
+	float2 baseTexCoord				: TEXCOORD0;
+};
+
+float4 main( PS_INPUT i ) : COLOR
+{
+#if USES_TEXTURE_BLENDS
+	HALF3 color0 = {0,0,0};
+	HALF3 color1 = {0,0,0};
+	HALF3 color2 = {0,0,0};
+
+#if HAS_BLEND1
+	color0 = lerp( color0, 0.25*tex2D( ExposureTextureSampler0, i.baseTexCoord ), g_TextureBlends[0] );
+	color1 = lerp( color1, 2.0*tex2D( ExposureTextureSampler1, i.baseTexCoord ), g_TextureBlends[0] );
+	color2 = lerp( color2, 16.0*tex2D( ExposureTextureSampler2, i.baseTexCoord ), g_TextureBlends[0] );
+#endif
+#if HAS_BLEND2
+	color0 = lerp( color0, 0.25*tex2D( ExposureTexture2Sampler0, i.baseTexCoord ), g_TextureBlends[1] );
+	color1 = lerp( color1, 2.0*tex2D( ExposureTexture2Sampler1, i.baseTexCoord ), g_TextureBlends[1] );
+	color2 = lerp( color2, 16.0*tex2D( ExposureTexture2Sampler2, i.baseTexCoord ), g_TextureBlends[1] );
+#endif
+#if HAS_BLEND3
+	color0 = lerp( color0, 0.25*tex2D( ExposureTexture3Sampler0, i.baseTexCoord ), g_TextureBlends[2] );
+	color1 = lerp( color1, 2.0*tex2D( ExposureTexture3Sampler1, i.baseTexCoord ), g_TextureBlends[2] );
+	color2 = lerp( color2, 16.0*tex2D( ExposureTexture3Sampler2, i.baseTexCoord ), g_TextureBlends[2] );
+#endif
+#if HAS_BLEND4
+	color0 = lerp( color0, 0.25*tex2D( ExposureTexture4Sampler0, i.baseTexCoord ), g_TextureBlends[3] );
+	color1 = lerp( color1, 2.0*tex2D( ExposureTexture4Sampler1, i.baseTexCoord ), g_TextureBlends[3] );
+	color2 = lerp( color2, 16.0*tex2D( ExposureTexture4Sampler2, i.baseTexCoord ), g_TextureBlends[3] );
+#endif
+
+#else
+	HALF3 color0 = 0.25*tex2D( ExposureTextureSampler0, i.baseTexCoord );
+	HALF3 color1 = 2.0*tex2D( ExposureTextureSampler1, i.baseTexCoord );
+	HALF3 color2 = 16.0*tex2D( ExposureTextureSampler2, i.baseTexCoord );
+#endif
+
+	// This is never fogged.
+//	return FinalOutput( float4( max(max(color0,color1),color2), 1.0f ), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_LINEAR, WRITE_DEPTH_TO_DESTALPHA, 1e20 ); //when writing depth to dest alpha, write a value guaranteed to saturate
+	return FinalOutput( float4(1,0,0,1 ), 0, PIXEL_FOG_TYPE_NONE, TONEMAP_SCALE_LINEAR, WRITE_DEPTH_TO_DESTALPHA, 1e20 ); //when writing depth to dest alpha, write a value guaranteed to saturate
+}

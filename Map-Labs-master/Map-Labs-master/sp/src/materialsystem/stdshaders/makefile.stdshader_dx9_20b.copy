@@ -55,3 +55,10 @@ solidenergy_vs20.fxc-----solidenergy_vs20
 gstring_light_volumetrics_ps20b.fxc-----gstring_light_volumetrics_ps20b
 gstring_light_volumetrics_vs20.fxc-----gstring_light_volumetrics_vs20
 blur_ps20b.fxc-----blur_ps20b
+SDK_sky_hdr_compressed_ps2x.fxc-----SDK_sky_hdr_compressed_ps20
+SDK_sky_hdr_compressed_ps2x.fxc-----SDK_sky_hdr_compressed_ps20b
+SDK_sky_hdr_compressed_rgbs_ps2x.fxc-----SDK_sky_hdr_compressed_rgbs_ps20
+SDK_sky_hdr_compressed_rgbs_ps2x.fxc-----SDK_sky_hdr_compressed_rgbs_ps20b
+SDK_sky_ps2x.fxc-----SDK_sky_ps20
+SDK_sky_ps2x.fxc-----SDK_sky_ps20b
+SDK_sky_vs20.fxc-----SDK_sky_vs20

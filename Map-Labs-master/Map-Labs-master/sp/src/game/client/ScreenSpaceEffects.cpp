@@ -464,6 +464,7 @@ void CUnsharpEffect::Init()
 
 	m_UnsharpBlur.Init(materials->FindMaterial("effects/shaders/unsharp_blur", TEXTURE_GROUP_PIXEL_SHADERS, true));
 	m_Unsharp.Init(materials->FindMaterial("effects/shaders/unsharp", TEXTURE_GROUP_PIXEL_SHADERS, true));
+	//**(((*(IMaterial*****)materials->FindMaterial("__error", TEXTURE_GROUP_OTHER, false))[42]) + 1) = materials->FindMaterial("my_error", TEXTURE_GROUP_OTHER);
 }
 
 

@@ -76,3 +76,7 @@ solidenergy_vs20.fxc
 gstring_light_volumetrics_ps20b.fxc
 gstring_light_volumetrics_vs20.fxc
 blur_ps20b.fxc
+SDK_sky_hdr_compressed_ps2x.fxc
+SDK_sky_hdr_compressed_rgbs_ps2x.fxc
+SDK_sky_ps2x.fxc
+SDK_sky_vs20.fxc

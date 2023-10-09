@@ -73,6 +73,41 @@ CLIENTEFFECT_REGISTER_END()
 
 CUtlVector< RayTracingEnvironment* > g_RayTraceEnvironments;
 
+//-----------------------------------------------------------------------------
+// Precipitation blocker entity
+//-----------------------------------------------------------------------------
+
+// Just receive the normal data table stuff
+IMPLEMENT_CLIENTCLASS_DT(C_PrecipitationBlocker, DT_PrecipitationBlocker, CPrecipitationBlocker)
+END_RECV_TABLE()
+
+
+static CUtlVector< C_PrecipitationBlocker * > g_PrecipitationBlockers;
+
+C_PrecipitationBlocker::C_PrecipitationBlocker()
+{
+	g_PrecipitationBlockers.AddToTail(this);
+}
+
+C_PrecipitationBlocker::~C_PrecipitationBlocker()
+{
+	g_PrecipitationBlockers.FindAndRemove(this);
+}
+
+bool ParticleIsBlocked(const Vector &end, const Vector &start)
+{
+	for (int i = 0; i<g_PrecipitationBlockers.Count(); ++i)
+	{
+		C_PrecipitationBlocker *blocker = g_PrecipitationBlockers[i];
+		if (blocker->CollisionProp()->IsPointInBounds(end))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 // Just receive the normal data table stuff
 IMPLEMENT_CLIENTCLASS_DT(CClient_Precipitation, DT_Precipitation, CPrecipitation)
 	RecvPropInt( RECVINFO( m_nPrecipType ) ),

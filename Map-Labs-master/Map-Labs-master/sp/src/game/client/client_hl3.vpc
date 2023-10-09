@@ -17,6 +17,11 @@ $Project
 		   $File	"$SRCDIR\game\client\c_npc_icedog.cpp"
 		}
 		
+		$Folder	"hl2_beta"
+		{
+		   $File	"$SRCDIR\game\client\hl2\c_weapon_gravitygun.cpp"
+		}
+		
 		$Folder "TE120"
 		{
 				$File	"te120\c_weapon_physconcussion.cpp"

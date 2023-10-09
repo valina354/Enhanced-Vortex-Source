@@ -605,6 +605,16 @@ void RegisterSharedScriptConstants()
 #endif
 
 	// 
+	// Firebullets
+	// 
+	ScriptRegisterConstant(g_pScriptVM, FIRE_BULLETS_FIRST_SHOT_ACCURATE, "Pop the first shot with perfect accuracy");
+	ScriptRegisterConstant(g_pScriptVM, FIRE_BULLETS_DONT_HIT_UNDERWATER, "If the shot hits its target underwater, don't damage it");
+	ScriptRegisterConstant(g_pScriptVM, FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS, "If the shot hits water surface, still call DoImpactEffect");
+	ScriptRegisterConstant(g_pScriptVM, FIRE_BULLETS_TEMPORARY_DANGER_SOUND, "Danger sounds added from this impact can be stomped immediately if another is queued");
+	ScriptRegisterConstant(g_pScriptVM, FIRE_BULLETS_NO_AUTO_GIB_TYPE, "Don't automatically add DMG_ALWAYSGIB or DMG_NEVERGIB if m_flDamage is set");
+	ScriptRegisterConstant(g_pScriptVM, FIRE_BULLETS_DONT_HIT_GLASS, "Ignore glass windows in TraceLine (for lasers, etc.)");
+
+	// 
 	// Misc. General
 	// 
 	ScriptRegisterConstant( g_pScriptVM, DAMAGE_NO, "Don't take damage (Use with GetTakeDamage/SetTakeDamage)" );

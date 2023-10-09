@@ -1635,6 +1635,13 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	CAmmoDef*	pAmmoDef	= GetAmmoDef();
 	int			nDamageType	= pAmmoDef->DamageType(info.m_iAmmoType);
 	int			nAmmoFlags	= pAmmoDef->Flags(info.m_iAmmoType);
+	int			iShotMask = MASK_SHOT;
+#ifdef MAPBASE
+	if (info.m_nFlags & FIRE_BULLETS_DONT_HIT_GLASS)
+	{
+		iShotMask = (MASK_OPAQUE_AND_NPCS | CONTENTS_DEBRIS | CONTENTS_HITBOX);
+}
+#endif // MAPBASE
 	
 	bool bDoServerEffects = true;
 

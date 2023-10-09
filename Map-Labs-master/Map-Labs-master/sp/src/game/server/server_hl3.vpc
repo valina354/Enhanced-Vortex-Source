@@ -92,6 +92,7 @@ $Project
 		   $File	"$SRCDIR\game\server\hl2\npc_mortarsynth.h"
 		   $File	"$SRCDIR\game\server\hl2\grenade_energy.cpp"
 		   $File	"$SRCDIR\game\server\hl2\grenade_energy.h"
+		   $File	"$SRCDIR\game\server\physgun.cpp"
 		   $File	"$SRCDIR\game\server\weapon_iceaxe.cpp"
 		}
 }

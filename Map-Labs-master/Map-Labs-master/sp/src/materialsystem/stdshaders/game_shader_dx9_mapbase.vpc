@@ -97,6 +97,8 @@ $Project
 		$File	"skydome_atmosphere.cpp"
 		$File	"skydome_atmosphere_helper.cpp"
 		$File	"skydome_atmosphere_helper.h"
+		$File	"sky_dx9.cpp"
+		$File	"sky_hdr_dx9.cpp"
 	}
 
 	//$Shaders	"mapbase_dx9_20b.txt"
