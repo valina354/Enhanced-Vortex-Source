@@ -12,9 +12,9 @@
 #endif
 
 #define MOD_WATERMARK_STR   "Half-life 3 Citadel Unleashed"
-#define MOD_VERSION_MAJOR   2
-#define MOD_VERSION_MINOR   7
-#define MOD_VERSION_PATCH   22
+#define MOD_VERSION_MAJOR   4
+#define MOD_VERSION_MINOR   0
+#define MOD_VERSION_PATCH   0
 
 #define TICK_INTERVAL			(gpGlobals->interval_per_tick)
 
@@ -662,7 +662,7 @@ const int FX_BLOODSPRAY_CLOUD	= 0x04;
 const int FX_BLOODSPRAY_ALL		= 0xFF;
 
 //-----------------------------------------------------------------------------
-#define MAX_SCREEN_OVERLAYS		10
+#define MAX_SCREEN_OVERLAYS		128
 
 // These are the types of data that hang off of CBaseEntities and the flag bits used to mark their presence
 enum
@@ -919,7 +919,7 @@ struct EmitSound_t
 	mutable HSOUNDSCRIPTHANDLE		m_hSoundScriptHandle;
 };
 
-#define MAX_ACTORS_IN_SCENE 16
+#define MAX_ACTORS_IN_SCENE 64
 
 //-----------------------------------------------------------------------------
 // Multiplayer specific defines

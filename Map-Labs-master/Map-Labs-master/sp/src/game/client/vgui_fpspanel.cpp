@@ -219,9 +219,9 @@ void CFPSPanel::Paint()
 
 	if (cl_showmod.GetBool()) {
 #ifdef _DEBUG
-		const char *pszConfig = "BETA";
+		const char *pszConfig = "RELEASE-DEBUG";
 #else
-		const char *pszConfig = "BETA NOT For Retail Copies";
+		const char *pszConfig = "RELEASE";
 #endif
 		g_pMatSystemSurface->DrawColoredText(m_hFont, x, 2 + (i++ * iFontTall), 255, 255, 255, 255, "%s %u.%u.%u-%s", MOD_WATERMARK_STR, MOD_VERSION_MAJOR, MOD_VERSION_MINOR, MOD_VERSION_PATCH, pszConfig);
 	}

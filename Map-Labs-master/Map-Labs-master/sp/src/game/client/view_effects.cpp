@@ -25,7 +25,7 @@ extern IntroData_t *g_pIntroData;
 
 
 // Arbitrary limit so that bad entity logic on the server can't consume tons of memory on the client.
-#define MAX_SHAKES		32
+#define MAX_SHAKES		256
 
 
 //-----------------------------------------------------------------------------

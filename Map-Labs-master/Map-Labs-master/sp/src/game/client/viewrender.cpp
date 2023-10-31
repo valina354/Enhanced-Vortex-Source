@@ -2203,17 +2203,17 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
 
 	// Don't want TF2 running less than DX 8
-	if ( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 80 )
+	if ( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() < 90 )
 	{
 		// We know they were running at least 8.0 when the game started...we check the 
 		// value in ClientDLL_Init()...so they must be messing with their DirectX settings.
-		if ( ( Q_stricmp( COM_GetModDirectory(), "tf" ) == 0 ) || ( Q_stricmp( COM_GetModDirectory(), "tf_beta" ) == 0 ) )
+		if ( ( Q_stricmp( COM_GetModDirectory(), "hl2" ) == 0 ) || ( Q_stricmp( COM_GetModDirectory(), "hl2" ) == 0 ) )
 		{
 			static bool bFirstTime = true;
 			if ( bFirstTime )
 			{
 				bFirstTime = false;
-				Msg( "This game has a minimum requirement of DirectX 8.0 to run properly.\n" );
+				Msg( "This game has a minimum requirement of DirectX 9.0 to run properly.\n" );
 			}
 			return;
 		}
@@ -2421,6 +2421,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;
 		render->ViewDrawFade( color, pMaterial );
 		PerformScreenOverlay( view.x, view.y, view.width, view.height );
+
+		UpdateScreenEffectTexture(0, view.x, view.y, view.width, view.height);
 
 		// Prevent sound stutter if going slow
 		engine->Sound_ExtraUpdate();	
@@ -6116,7 +6118,7 @@ void CBaseWorldView::PushView( float waterHeight )
 	if( m_DrawFlags & DF_RENDER_REFRACTION )
 	{
 		pRenderContext->SetFogZ( waterHeight );
-		pRenderContext->SetHeightClipZ( waterHeight );
+		pRenderContext->SetHeightClipZ(waterHeight - 15.0f); // GSTRINGMIGRATION
 		pRenderContext->SetHeightClipMode( clipMode );
 
 		// Have to re-set up the view since we reset the size
@@ -6770,6 +6772,7 @@ void CAboveWaterView::CReflectionView::Setup( bool bReflectEntities )
 	// NOTE: Clearing the color is unnecessary since we're drawing the skybox
 	// and dest-alpha is never used in the reflection
 	m_DrawFlags = DF_RENDER_REFLECTION | DF_CLIP_Z | DF_CLIP_BELOW | 
+		DF_RENDER_UNDERWATER | // GSTRINGMIGRATION draw partial underwater to fix ugly water edge
 		DF_RENDER_ABOVEWATER;
 
 	// NOTE: This will cause us to draw the 2d skybox in the reflection 
